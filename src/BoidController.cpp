@@ -76,7 +76,7 @@ void BoidController::applyForceToBoids( float zoneRadius, float lowerThresh, flo
 		 */
 		
 		// ADD PERLIN NOISE INFLUENCE
-		float scale = 0.003f;
+		float scale = 0.005f;
 		float multi = 0.01f;
 		Vec3f perlin = mPerlin.dfBm( p1->pos * scale ) * multi;
 		p1->acc += perlin;
