@@ -15,7 +15,6 @@
 #include <vector>
 
 #define NUM_INITIAL_PARTICLES 500
-#define NUM_INITIAL_PREDATORS 9
 #define NUM_PARTICLES_TO_SPAWN 15
 
 using namespace ci;
@@ -39,8 +38,8 @@ public:
 	float				mCameraDistance;
 	
 	BoidController		boidController;
-	float				mZoneRadius;
-	float				mLowerThresh, mHigherThresh;
+	float				mZoneRadius; //used for cohesion (flocking)
+	float				mLowerThresh, mHigherThresh; // mLower -> used for seperation rules mHigherThresh -> used for alignment
 	float				mAttractStrength, mRepelStrength, mOrientStrength;
 	
 	bool				mCentralGravity;
@@ -121,7 +120,7 @@ void BoidsApp::setup()
 	
 	// CREATE PARTICLE CONTROLLER
 	boidController.addBoids( NUM_INITIAL_PARTICLES );
-	//boidController.addPredators( NUM_INITIAL_PREDATORS );
+
 }
 
 void BoidsApp::keyDown( KeyEvent event )
@@ -138,8 +137,7 @@ void BoidsApp::update()
 {
 	if( mLowerThresh > mHigherThresh ) mHigherThresh = mLowerThresh;
 	
-	//boidController.applyForceToPredators( mZoneRadius, 0.4f, 0.7f );	
-	boidController.applyForceToBoids( mZoneRadius, mLowerThresh, mHigherThresh, mAttractStrength, mRepelStrength, mOrientStrength );
+	boidController.applyForceToBoids( mZoneRadius, mLowerThresh, mHigherThresh, mAttractStrength, mRepelStrength, mOrientStrength);
 	if( mCentralGravity ) boidController.pullToCenter( mCenter );
 	boidController.update( mFlatten );
 	

@@ -16,12 +16,10 @@ class BoidController {
 public:
 	BoidController();
 	void applyForceToBoids( float zoneRadius, float lowerThresh, float higherThresh, float attractStrength, float repelStrength, float orientStrength );
-	void applyForceToPredators( float zoneRadius, float lowerThresh, float higherThresh );
 	void pullToCenter( const ci::Vec3f &center );
 	void update( bool flatten );
 	void draw();
 	void addBoids( int amt );
-	void addPredators( int amt );
 	void removeBoids( int amt );
 	ci::Vec3f getPos();
 	

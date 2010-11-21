@@ -56,7 +56,7 @@ void Boid::update( bool flatten )
 	mCrowdFactor -= ( mCrowdFactor - ( 1.0f - mNumNeighbors * 0.02f ) ) * 0.1f;
 	mCrowdFactor = constrain( mCrowdFactor, 0.5f, 1.0f );
 	
-	mFear -= ( mFear - 0.0f ) * 0.2f;
+	mFear -= ( mFear) * 0.2f;
 	
 	if( flatten )
 		acc.z = 0.0f;

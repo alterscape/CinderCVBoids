@@ -68,12 +68,12 @@ void BoidController::applyForceToBoids( float zoneRadius, float lowerThresh, flo
 		}
 		
 		boidCentroid += p1->pos;
-		/*
+	
 		 if( p1->mNumNeighbors > 0 ){ // Cohesion 
 		 Vec3f neighborAveragePos = ( p1->mNeighborPos/(float)p1->mNumNeighbors );
-		 p1->mAcc += ( neighborAveragePos - p1->mPos ) * attractStrength;	
+		 p1->acc += ( neighborAveragePos - p1->pos ) * attractStrength;	
 		 }
-		 */
+		 
 		
 		// ADD PERLIN NOISE INFLUENCE
 		float scale = 0.005f;
@@ -111,60 +111,12 @@ void BoidController::applyForceToBoids( float zoneRadius, float lowerThresh, flo
 }
 
 
-void BoidController::applyForceToPredators( float zoneRadius, float lowerThresh, float higherThresh )
-{
-	/*float twoPI = M_PI * 2.0f;
-	for( list<Predator>::iterator P1 = mPredators.begin(); P1 != mPredators.end(); ++P1 ){
-		
-		list<Predator>::iterator P2 = P1;
-		for( ++P2; P2 != mPredators.end(); ++P2 ) {
-			Vec3f dir = P1->mPos[0] - P2->mPos[0];
-			float distSqrd = dir.lengthSquared();
-			float zoneRadiusSqrd = zoneRadius * zoneRadius * 4.0f;
-			
-			if( distSqrd < zoneRadiusSqrd ){		// Neighbor is in the zone
-				float per = distSqrd/zoneRadiusSqrd;
-				if( per < lowerThresh ){			// Separation
-					float F = ( lowerThresh/per - 1.0f ) * 0.01f;
-					dir.normalize();
-					dir *= F;
-					
-					P1->mAcc += dir;
-					P2->mAcc -= dir;
-				} else if( per < higherThresh ){	// Alignment
-					float threshDelta	= higherThresh - lowerThresh;
-					float adjPer		= ( per - lowerThresh )/threshDelta;
-					float F				= ( 1.0f - cos( adjPer * twoPI ) * -0.5f + 0.5f ) * 0.3f;
-					
-					P1->mAcc += P2->mVelNormal * F;
-					P2->mAcc += P1->mVelNormal * F;
-					
-				} else {							// Cohesion
-					float threshDelta	= 1.0f - higherThresh;
-					float adjPer		= ( per - higherThresh )/threshDelta;
-					float F				= ( 1.0 - ( cos( adjPer * twoPI ) * -0.5f + 0.5f ) ) * 0.1f;
-					
-					dir.normalize();
-					dir *= F;
-					
-					P1->mAcc -= dir;
-					P2->mAcc += dir;
-				}
-			}
-		}
-	}*/
-}
-
-
 void BoidController::pullToCenter( const ci::Vec3f &center )
 {
 	for( list<Boid>::iterator p = particles.begin(); p != particles.end(); ++p ){
 		p->pullToCenter( center );
 	}
 	
-	/*for( list<Predator>::iterator p = mPredators.begin(); p != mPredators.end(); ++p ){
-		p->pullToCenter( center );
-	}*/
 }
 
 void BoidController::update( bool flatten )
@@ -178,9 +130,6 @@ void BoidController::update( bool flatten )
 		}
 	}
 	
-	/*for( list<Predator>::iterator p = mPredators.begin(); p != mPredators.end(); ++p ){
-		p->update( flatten );
-	}*/
 }
 
 void BoidController::draw()
@@ -194,15 +143,6 @@ void BoidController::draw()
 	//glEnd();
 }
 
-void BoidController::addPredators( int amt )
-{
-	/*for( int i=0; i<amt; i++ )
-	{
-		Vec3f pos = Rand::randVec3f() * Rand::randFloat( 500.0f, 750.0f );
-		Vec3f vel = Rand::randVec3f();
-		mPredators.push_back( Predator( pos, vel ) );
-	}*/
-}
 
 void BoidController::addBoids( int amt )
 {
