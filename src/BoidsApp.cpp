@@ -6,6 +6,7 @@
 #include "cinder/Camera.h"
 #include "cinder/Rand.h"
 #include "BoidController.h"
+#include "time.h"
 
 //CV stuff
 #include "cinder/gl/Texture.h"
@@ -27,6 +28,7 @@ public:
 	void setup();
 	void update();
 	void draw();
+	bool checkTime();
 	
 	// PARAMS
 	params::InterfaceGl	mParams;
@@ -41,11 +43,14 @@ public:
 	float				mZoneRadius; //used for cohesion (flocking)
 	float				mLowerThresh, mHigherThresh; // mLower -> used for seperation rules mHigherThresh -> used for alignment
 	float				mAttractStrength, mRepelStrength, mOrientStrength;
+	int					changeInterval;
+	clock_t				changeTimer;
 	
 	bool				mCentralGravity;
 	bool				mFlatten;
 	bool				mSaveFrames;
 	bool				mIsRenderingPrint;
+	
 	
 	Capture				capture;
 	gl::Texture			texture;
@@ -73,6 +78,9 @@ void BoidsApp::setup()
 	mAttractStrength	= 0.004f;
 	mRepelStrength		= 0.01f;
 	mOrientStrength		= 0.01f;
+	changeInterval		= 5.0;
+	
+	changeTimer				= clock() + changeInterval * CLOCKS_PER_SEC;
 	
 	// SETUP CAMERA
 	mCameraDistance		= 350.0f;
@@ -118,6 +126,8 @@ void BoidsApp::setup()
 	mParams.addSeparator();
 	mParams.addParam( "CV Threshhold", &cvThreshholdLevel, "min=0 max=255 step=1 keyIncr=t keyDecr=T" );
 	
+	
+	
 	// CREATE PARTICLE CONTROLLER
 	boidController.addBoids( NUM_INITIAL_PARTICLES );
 
@@ -145,6 +155,10 @@ void BoidsApp::update()
 	mCam.lookAt( mEye, mCenter, mUp );
 	gl::setMatrices( mCam );
 	gl::rotate( mSceneRotation );
+	
+	if (checkTime()) {
+			mFlatten = !mFlatten;
+	}
 	
 	//OpenCV IO
 	if( capture && capture.checkNewFrame() ) {
@@ -191,6 +205,14 @@ void BoidsApp::draw()
 	params::InterfaceGl::draw();
 }
 
+bool BoidsApp::checkTime()
+{	if ( clock() % changeTimer < 1.0 )
+		return TRUE;
+	else {
+		return FALSE;
+	}
+
+}
 
 
 CINDER_APP_BASIC( BoidsApp, RendererGl )
