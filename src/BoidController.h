@@ -15,19 +15,33 @@
 class BoidController {
 public:
 	BoidController();
-	void applyForceToBoids( float zoneRadius, float lowerThresh, float higherThresh, float attractStrength, float repelStrength, float orientStrength );
+	void applyForceToBoids();// float zoneRadius, float lowerThresh, float higherThresh, float attractStrength, float repelStrength, float orientStrength );
 	void pullToCenter( const ci::Vec3f &center );
-	void update( bool flatten );
+	void update();
 	void draw();
 	void addBoids( int amt );
 	void removeBoids( int amt );
 	ci::Vec3f getPos();
+	
+	//I don't like exposing these this way, but it makes mParams happier;
+	float	zoneRadius;
+	float	lowerThresh;
+	float	higherThresh;
+	float	attractStrength;
+	float	repelStrength;
+	float	orientStrength;
+	
+	bool	centralGravity;
+	bool	flatten;
 	
 private:
 	
 	ci::Perlin mPerlin;
 	
 	std::list<Boid>	particles;
+	std::list<BoidController> otherControllers;
 	ci::Vec3f boidCentroid;
 	int numBoids;
+	
+	static const float TWO_PI = M_PI * 2.0f;
 };

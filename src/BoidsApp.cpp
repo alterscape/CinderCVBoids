@@ -15,7 +15,7 @@
 
 #include <vector>
 
-#define NUM_INITIAL_PARTICLES 500
+#define NUM_INITIAL_PARTICLES 250
 #define NUM_PARTICLES_TO_SPAWN 15
 
 using namespace ci;
@@ -38,16 +38,10 @@ public:
 	Quatf				mSceneRotation;
 	Vec3f				mEye, mCenter, mUp;
 	float				mCameraDistance;
-	
-	BoidController		boidController;
-	float				mZoneRadius; //used for cohesion (flocking)
-	float				mLowerThresh, mHigherThresh; // mLower -> used for seperation rules mHigherThresh -> used for alignment
-	float				mAttractStrength, mRepelStrength, mOrientStrength;
-	int					changeInterval;
 	clock_t				changeTimer;
-	
-	bool				mCentralGravity;
-	bool				mFlatten;
+	BoidController		flock_one;
+	BoidController		flock_two;
+
 	bool				mSaveFrames;
 	bool				mIsRenderingPrint;
 	
@@ -68,18 +62,10 @@ void BoidsApp::setup()
 	Rand::randomize();
 	
 	mCenter				= Vec3f( getWindowWidth() * 0.5f, getWindowHeight() * 0.5f, 0.0f );
-	mCentralGravity		= true;
-	mFlatten			= false;
 	mSaveFrames			= false;
 	mIsRenderingPrint	= false;
-	mZoneRadius			= 80.0f;
-	mLowerThresh		= 0.5f;
-	mHigherThresh		= 0.8f;
-	mAttractStrength	= 0.004f;
-	mRepelStrength		= 0.01f;
-	mOrientStrength		= 0.01f;
+
 	changeInterval		= 5.0;
-	
 	changeTimer				= clock() + changeInterval * CLOCKS_PER_SEC;
 	
 	// SETUP CAMERA
@@ -107,36 +93,35 @@ void BoidsApp::setup()
 		console() << "Failed to initialize capture device" << std::endl;
 	}
 	cvThreshholdLevel = 128;
+		
+	// CREATE PARTICLE CONTROLLER
+	flock_one.addBoids( NUM_INITIAL_PARTICLES );
+	flock_two.addBoids( NUM_INITIAL_PARTICLES );
 	
 	// SETUP PARAMS
 	mParams = params::InterfaceGl( "Flocking", Vec2i( 200, 310 ) );
 	mParams.addParam( "Scene Rotation", &mSceneRotation, "opened=1" );
 	mParams.addSeparator();
 	mParams.addParam( "Eye Distance", &mCameraDistance, "min=100.0 max=2000.0 step=50.0 keyIncr=s keyDecr=w" );
-	mParams.addParam( "Center Gravity", &mCentralGravity, "keyIncr=g" );
-	mParams.addParam( "Flatten", &mFlatten, "keyIncr=f" );
+	mParams.addParam( "Center Gravity", &flock_one.centralGravity, "keyIncr=g" );
+	mParams.addParam( "Flatten", &flock_one.flatten, "keyIncr=f" );
 	mParams.addSeparator();
-	mParams.addParam( "Zone Radius", &mZoneRadius, "min=10.0 max=100.0 step=1.0 keyIncr=z keyDecr=Z" );
-	mParams.addParam( "Lower Thresh", &mLowerThresh, "min=0.025 max=1.0 step=0.025 keyIncr=l keyDecr=L" );
-	mParams.addParam( "Higher Thresh", &mHigherThresh, "min=0.025 max=1.0 step=0.025 keyIncr=h keyDecr=H" );
+	mParams.addParam( "Zone Radius", &flock_one.zoneRadius, "min=10.0 max=100.0 step=1.0 keyIncr=z keyDecr=Z" );
+	mParams.addParam( "Lower Thresh", &flock_one.lowerThresh, "min=0.025 max=1.0 step=0.025 keyIncr=l keyDecr=L" );
+	mParams.addParam( "Higher Thresh", &flock_one.higherThresh, "min=0.025 max=1.0 step=0.025 keyIncr=h keyDecr=H" );
 	mParams.addSeparator();
-	mParams.addParam( "Attract Strength", &mAttractStrength, "min=0.001 max=0.1 step=0.001 keyIncr=a keyDecr=A" );
-	mParams.addParam( "Repel Strength", &mRepelStrength, "min=0.001 max=0.1 step=0.001 keyIncr=r keyDecr=R" );
-	mParams.addParam( "Orient Strength", &mOrientStrength, "min=0.001 max=0.1 step=0.001 keyIncr=o keyDecr=O" );
+	mParams.addParam( "Attract Strength", &flock_one.attractStrength, "min=0.001 max=0.1 step=0.001 keyIncr=a keyDecr=A" );
+	mParams.addParam( "Repel Strength", &flock_one.repelStrength, "min=0.001 max=0.1 step=0.001 keyIncr=r keyDecr=R" );
+	mParams.addParam( "Orient Strength", &flock_one.orientStrength, "min=0.001 max=0.1 step=0.001 keyIncr=o keyDecr=O" );
 	mParams.addSeparator();
 	mParams.addParam( "CV Threshhold", &cvThreshholdLevel, "min=0 max=255 step=1 keyIncr=t keyDecr=T" );
 	
-	
-	
-	// CREATE PARTICLE CONTROLLER
-	boidController.addBoids( NUM_INITIAL_PARTICLES );
-
 }
 
 void BoidsApp::keyDown( KeyEvent event )
 {
 	if( event.getChar() == 'p' ){
-		boidController.addBoids( NUM_PARTICLES_TO_SPAWN );
+		flock_one.addBoids( NUM_PARTICLES_TO_SPAWN );
 	} else if( event.getChar() == ' ' ){
 		mSaveFrames = !mSaveFrames;
 	}
@@ -145,11 +130,13 @@ void BoidsApp::keyDown( KeyEvent event )
 
 void BoidsApp::update()
 {
-	if( mLowerThresh > mHigherThresh ) mHigherThresh = mLowerThresh;
+	flock_one.applyForceToBoids();
+	if( flock_one.centralGravity ) flock_one.pullToCenter( mCenter );
+	flock_one.update();
 	
-	boidController.applyForceToBoids( mZoneRadius, mLowerThresh, mHigherThresh, mAttractStrength, mRepelStrength, mOrientStrength);
-	if( mCentralGravity ) boidController.pullToCenter( mCenter );
-	boidController.update( mFlatten );
+	flock_two.applyForceToBoids();
+	if( flock_two.centralGravity) flock_two.pullToCenter( mCenter);
+	flock_two.update();
 	
 	mEye	= Vec3f( 0.0f, 0.0f, mCameraDistance );
 	mCam.lookAt( mEye, mCenter, mUp );
@@ -167,7 +154,6 @@ void BoidsApp::update()
 		cv::threshold( gray, output, cvThreshholdLevel, 255, CV_8U );
 		
 		ci::Surface surface = fromOcv(output);
-		
 		
 		ci::Surface::Iter pixelIterator = surface.getIter(Area(0,0,10,10));
 		//for (pixelIterator; pixelIterator != pixelIterator.; <#increment#>) {
@@ -195,7 +181,10 @@ void BoidsApp::draw()
 		gl::draw( texture );
 	
 	gl::color( ColorA( 1.0f, 1.0f, 1.0f, 1.0f ) );
-	boidController.draw();
+	flock_one.draw();
+	
+	gl::color( ColorA( 1.0f, 1.0f, 1.0f, 1.0f ) );
+	flock_two.draw();
 	
 	if( mSaveFrames ){
 		writeImage( getHomeDirectory() + "flocking/image_" + toString( getElapsedFrames() ) + ".png", copyWindowSurface() );
