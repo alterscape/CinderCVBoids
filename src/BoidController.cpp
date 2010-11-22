@@ -17,11 +17,22 @@ using std::list;
 BoidController::BoidController()
 {
 	mPerlin = Perlin( 4 );
+	zoneRadius			= 80.0f;
+	lowerThresh			= 0.5f;
+	higherThresh		= 0.8f;
+	attractStrength		= 0.004f;
+	repelStrength		= 0.01f;
+	orientStrength		= 0.01f;
+	
+	centralGravity		= true;
+	flatten				= true;
+	
 }
 
-void BoidController::applyForceToBoids( float zoneRadius, float lowerThresh, float higherThresh, float attractStrength, float repelStrength, float alignStrength  )
+void BoidController::applyForceToBoids()
 {
-	float twoPI = M_PI * 2.0f;
+	if(lowerThresh > higherThresh ) higherThresh = lowerThresh;
+	
 	boidCentroid = Vec3f::zero();
 	numBoids = particles.size();
 	
@@ -48,7 +59,7 @@ void BoidController::applyForceToBoids( float zoneRadius, float lowerThresh, flo
 				} else if( per < higherThresh ){	// Alignment
 					float threshDelta	= higherThresh - lowerThresh;
 					float adjPer		= ( per - lowerThresh )/threshDelta;
-					float F				= ( 1.0 - ( cos( adjPer * twoPI ) * -0.5f + 0.5f ) ) * alignStrength;
+					float F				= ( 1.0 - ( cos( adjPer * TWO_PI ) * -0.5f + 0.5f ) ) * orientStrength;
 					
 					p1->acc += p2->velNormal * F;
 					p2->acc += p1->velNormal * F;
@@ -56,7 +67,7 @@ void BoidController::applyForceToBoids( float zoneRadius, float lowerThresh, flo
 				} else {							// Cohesion (prep)
 					float threshDelta	= 1.0f - higherThresh;
 					float adjPer		= ( per - higherThresh )/threshDelta;
-					float F				= ( 1.0 - ( cos( adjPer * twoPI ) * -0.5f + 0.5f ) ) * attractStrength;
+					float F				= ( 1.0 - ( cos( adjPer * TWO_PI ) * -0.5f + 0.5f ) ) * attractStrength;
 					
 					dir.normalize();
 					dir *= F;
@@ -69,10 +80,10 @@ void BoidController::applyForceToBoids( float zoneRadius, float lowerThresh, flo
 		
 		boidCentroid += p1->pos;
 	
-		 if( p1->mNumNeighbors > 0 ){ // Cohesion 
-		 Vec3f neighborAveragePos = ( p1->mNeighborPos/(float)p1->mNumNeighbors );
-		 p1->acc += ( neighborAveragePos - p1->pos ) * attractStrength;	
-		 }
+		if( p1->mNumNeighbors > 0 ){ // Cohesion 
+			Vec3f neighborAveragePos = ( p1->mNeighborPos/(float)p1->mNumNeighbors );
+			p1->acc += ( neighborAveragePos - p1->pos ) * attractStrength;	
+		}
 		 
 		
 		// ADD PERLIN NOISE INFLUENCE
@@ -119,7 +130,7 @@ void BoidController::pullToCenter( const ci::Vec3f &center )
 	
 }
 
-void BoidController::update( bool flatten )
+void BoidController::update()
 {
 	for( list<Boid>::iterator p = particles.begin(); p != particles.end(); ){
 		if( p->mIsDead ){
