@@ -20,6 +20,7 @@
 
 using namespace ci;
 using namespace ci::app;
+using namespace std;
 
 class BoidsApp : public AppBasic {
 public:
@@ -38,14 +39,18 @@ public:
 	Quatf				mSceneRotation;
 	Vec3f				mEye, mCenter, mUp;
 	float				mCameraDistance;
-	clock_t				changeTimer;
 	BoidController		flock_one;
 	BoidController		flock_two;
-
 	bool				mSaveFrames;
 	bool				mIsRenderingPrint;
 	
+<<<<<<< HEAD
 	float				changeInterval;
+=======
+	double				changeInterval;
+	time_t				lastChange;
+	
+>>>>>>> 8c7512826a83ef18f850335be244e8f3bd1482a1
 	
 	Capture				capture;
 	gl::Texture			texture;
@@ -66,8 +71,14 @@ void BoidsApp::setup()
 	mSaveFrames			= false;
 	mIsRenderingPrint	= false;
 
+<<<<<<< HEAD
 	changeInterval		= 5.0;
 	changeTimer			= clock() + changeInterval * CLOCKS_PER_SEC;
+=======
+	changeInterval		= 10.0;
+	time(&lastChange);
+
+>>>>>>> 8c7512826a83ef18f850335be244e8f3bd1482a1
 	
 	// SETUP CAMERA
 	mCameraDistance		= 350.0f;
@@ -150,9 +161,15 @@ void BoidsApp::update()
 	gl::setMatrices( mCam );
 	gl::rotate( mSceneRotation );
 	
+<<<<<<< HEAD
 	//if (checkTime()) {
 //			flatten = !flatten;
 //	}
+=======
+	if (checkTime()) {
+			flock_one.flatten = !flock_one.flatten;
+	}
+>>>>>>> 8c7512826a83ef18f850335be244e8f3bd1482a1
 	
 	//OpenCV IO
 	if( capture && capture.checkNewFrame() ) {
@@ -201,13 +218,21 @@ void BoidsApp::draw()
 	params::InterfaceGl::draw();
 }
 
+
+
 bool BoidsApp::checkTime()
-{	if ( clock() % changeTimer < 1.0 )
+{
+	time_t newTime = time(&newTime);
+	double dif;
+	
+	dif = difftime(newTime,lastChange);
+	
+	if ( dif >= changeInterval) {
+		lastChange = newTime;
 		return TRUE;
-	else {
+	} else {
 		return FALSE;
 	}
 }
-
 
 CINDER_APP_BASIC( BoidsApp, RendererGl )
