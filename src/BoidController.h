@@ -11,6 +11,8 @@
 #include "Boid.h"
 #include <list>
 #include "cinder/Perlin.h"
+#include <boost/ptr_container/ptr_list.hpp>
+
 
 class BoidController {
 public:
@@ -21,7 +23,9 @@ public:
 	void draw();
 	void addBoids( int amt );
 	void removeBoids( int amt );
+	ci::Color getColor(Boid *boid);
 	ci::Vec3f getPos();
+	void addOtherFlock(BoidController *flock);
 	
 	//I don't like exposing these this way, but it makes mParams happier;
 	float	zoneRadius;
@@ -34,12 +38,14 @@ public:
 	bool	centralGravity;
 	bool	flatten;
 	
+	ci::Color baseColor;
+	
 private:
 	
 	ci::Perlin mPerlin;
 	
 	std::list<Boid>	particles;
-	std::list<BoidController> otherControllers;
+	boost::ptr_list<BoidController> otherControllers;
 	ci::Vec3f boidCentroid;
 	int numBoids;
 	

@@ -1,4 +1,5 @@
 #include "Boid.h"
+#include "BoidController.h"
 #include "cinder/Rand.h"
 #include "cinder/gl/gl.h"
 #include "cinder/app/AppBasic.h"
@@ -6,12 +7,9 @@
 using namespace ci;
 using std::vector;
 
-Boid::Boid()
+Boid::Boid( Vec3f pos, Vec3f vel, bool followed, BoidController* parent )
 {
-}
-
-Boid::Boid( Vec3f pos, Vec3f vel, bool followed )
-{
+	this->parent	= parent;
 	this->pos		= pos;
 	tailPos			= pos;
 	this->vel		= vel;
@@ -74,8 +72,9 @@ void Boid::update( bool flatten )
 	tailPos = pos - ( velNormal * mLength );
 	vel *= mDecay;
 	
-	float c = math<float>::min( mNumNeighbors/50.0f, 1.0f );
-	mColor = ColorA( CM_HSV, 1.0f - c, c, c * 0.5f + 0.5f, 1.0f );
+	//float c = math<float>::min( mNumNeighbors/50.0f, 1.0f );
+//	mColor = ColorA( CM_HSV, 1.0f - c, c, c * 0.5f + 0.5f, 1.0f );
+	mColor = parent->getColor(this);
 	
 	acc = Vec3f::zero();
 	mNeighborPos = Vec3f::zero();

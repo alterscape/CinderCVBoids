@@ -25,8 +25,7 @@ BoidController::BoidController()
 	orientStrength		= 0.01f;
 	
 	centralGravity		= true;
-	flatten				= true;
-	
+	flatten				= true;	
 }
 
 void BoidController::applyForceToBoids()
@@ -76,6 +75,52 @@ void BoidController::applyForceToBoids()
 					p2->acc += dir;
 				}
 			}
+			//now look at the other systems
+			//outer level of iteration loops over the other boid systems
+			//for( boost::ptr_list<BoidController>::iterator controller = otherControllers.begin(); controller != otherControllers.end(); ++controller ){
+			{
+				boost::ptr_list<BoidController>::iterator controller = otherControllers.begin();
+				//inner level of iteration loops over the boids in those systems
+				for (list<Boid>::iterator p3 = controller->particles.begin(); p3 != controller->particles.end(); ++p3) {
+					Vec3f dir = p1->pos - p3->pos;
+					float distSqrd = dir.lengthSquared();
+					float zoneRadiusSqrd = zoneRadius * p1->mCrowdFactor * zoneRadius * p3->mCrowdFactor;
+					
+					if( distSqrd < zoneRadiusSqrd ){		// Neighbor is in the zone
+						float per = distSqrd/zoneRadiusSqrd;
+						p1->addNeighborPos( p3->pos );
+						p3->addNeighborPos( p1->pos );
+						
+						if( per < lowerThresh ){			// Separation
+							float F = ( lowerThresh/per - 1.0f ) * repelStrength;
+							dir.normalize();
+							dir *= F;
+							
+							p1->acc += dir;
+							p3->acc -= dir;
+						} else if( per < higherThresh ){	// Alignment
+							float threshDelta	= higherThresh - lowerThresh;
+							float adjPer		= ( per - lowerThresh )/threshDelta;
+							float F				= ( 1.0 - ( cos( adjPer * TWO_PI ) * -0.5f + 0.5f ) ) * orientStrength;
+							
+							p1->acc += p3->velNormal * F;
+							p3->acc += p1->velNormal * F;
+							
+						} else {							// Cohesion (prep)
+							float threshDelta	= 1.0f - higherThresh;
+							float adjPer		= ( per - higherThresh )/threshDelta;
+							float F				= ( 1.0 - ( cos( adjPer * TWO_PI ) * -0.5f + 0.5f ) ) * attractStrength;
+							
+							dir.normalize();
+							dir *= F;
+							
+							p1->acc -= dir;
+							p3->acc += dir;
+						}
+					}
+				}
+					 
+			}
 		}
 		
 		boidCentroid += p1->pos;
@@ -92,7 +137,7 @@ void BoidController::applyForceToBoids()
 		Vec3f perlin = mPerlin.dfBm( p1->pos * scale ) * multi;
 		p1->acc += perlin;
 		
-		
+				
 		// CHECK WHETHER THERE IS ANY PARTICLE/PREDATOR INTERACTION
 		/*float eatDistSqrd = 50.0f;
 		float predatorZoneRadiusSqrd = zoneRadius * zoneRadius * 5.0f;
@@ -165,7 +210,7 @@ void BoidController::addBoids( int amt )
 		bool followed = false;
 		if( particles.size() == 0 ) followed = true;
 		
-		particles.push_back( Boid( pos, vel, followed ) );
+		particles.push_back( Boid( pos, vel, followed, this ) );
 	}
 }
 
@@ -180,4 +225,22 @@ void BoidController::removeBoids( int amt )
 Vec3f BoidController::getPos()
 {
 	return particles.begin()->pos;
+}
+
+/**
+ * Returns the color for a boid belonging to this boid controller.
+ * @param boid the boid to operate on
+ * @return the color the boid should be painted.
+ */
+
+ci::Color BoidController::getColor(Boid *boid) 
+{
+//	float c = math<float>::min( boid->mNumNeighbors/50.0f, 1.0f );
+//	return ColorA( CM_HSV, 1.0f - c, c, c * 0.5f + 0.5f, 1.0f );
+	return baseColor;
+}
+
+void BoidController::addOtherFlock(BoidController *flock)
+{
+	otherControllers.push_back(flock);
 }

@@ -15,7 +15,7 @@
 
 #include <vector>
 
-#define NUM_INITIAL_PARTICLES 250
+#define NUM_INITIAL_PARTICLES 120
 #define NUM_PARTICLES_TO_SPAWN 15
 
 using namespace ci;
@@ -45,6 +45,7 @@ public:
 	bool				mSaveFrames;
 	bool				mIsRenderingPrint;
 	
+	float				changeInterval;
 	
 	Capture				capture;
 	gl::Texture			texture;
@@ -66,7 +67,7 @@ void BoidsApp::setup()
 	mIsRenderingPrint	= false;
 
 	changeInterval		= 5.0;
-	changeTimer				= clock() + changeInterval * CLOCKS_PER_SEC;
+	changeTimer			= clock() + changeInterval * CLOCKS_PER_SEC;
 	
 	// SETUP CAMERA
 	mCameraDistance		= 350.0f;
@@ -97,7 +98,13 @@ void BoidsApp::setup()
 	// CREATE PARTICLE CONTROLLER
 	flock_one.addBoids( NUM_INITIAL_PARTICLES );
 	flock_two.addBoids( NUM_INITIAL_PARTICLES );
+	//flock_one.baseColor = ColorA( CM_HSV, 0, 0.19, 0.23);		//Muted red
+	//flock_two.baseColor = ColorA( CM_HSV, 0.94, 0.26, 0.23);	//Muted blue
+	flock_one.baseColor = ColorA( CM_RGB, 1.0, 0.0, 0.0);
+	flock_two.baseColor = ColorA( CM_RGB, 0.0, 0.0, 1.0);
 	
+	flock_one.addOtherFlock(&flock_two);
+	flock_two.addOtherFlock(&flock_one);
 	// SETUP PARAMS
 	mParams = params::InterfaceGl( "Flocking", Vec2i( 200, 310 ) );
 	mParams.addParam( "Scene Rotation", &mSceneRotation, "opened=1" );
@@ -143,9 +150,9 @@ void BoidsApp::update()
 	gl::setMatrices( mCam );
 	gl::rotate( mSceneRotation );
 	
-	if (checkTime()) {
-			mFlatten = !mFlatten;
-	}
+	//if (checkTime()) {
+//			flatten = !flatten;
+//	}
 	
 	//OpenCV IO
 	if( capture && capture.checkNewFrame() ) {
@@ -200,7 +207,6 @@ bool BoidsApp::checkTime()
 	else {
 		return FALSE;
 	}
-
 }
 
 

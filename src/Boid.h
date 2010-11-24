@@ -12,10 +12,13 @@
 #include "cinder/Color.h"
 #include <vector>
 
+//all design is compromise.
+class BoidController;
+
 class Boid {
 public:
 	Boid();
-	Boid( ci::Vec3f pos, ci::Vec3f vel, bool followed );
+	Boid( ci::Vec3f pos, ci::Vec3f vel, bool followed, BoidController *parent );
 	void pullToCenter( const ci::Vec3f &center );
 	void update( bool flatten );
 	void draw();
@@ -44,4 +47,6 @@ public:
 	
 	bool		mIsDead;
 	bool		mFollowed;
+	
+	BoidController *parent;
 };
