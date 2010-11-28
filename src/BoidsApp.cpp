@@ -7,6 +7,7 @@
 #include "cinder/Rand.h"
 #include "BoidController.h"
 #include "time.h"
+#include "cinder/Surface.h"
 
 //CV stuff
 #include "cinder/gl/Texture.h"
@@ -28,6 +29,7 @@ public:
 	void keyDown( KeyEvent event );
 	void setup();
 	void update();
+	void drawCapture();
 	void draw();
 	bool checkTime();
 	
@@ -50,6 +52,7 @@ public:
 	Capture				capture;
 	gl::Texture			texture;
 	int					cvThreshholdLevel;
+	
 };
 
 void BoidsApp::prepareSettings( Settings *settings )
@@ -73,7 +76,7 @@ void BoidsApp::setup()
 	mCameraDistance		= 350.0f;
 	mEye				= Vec3f( 0.0f, 0.0f, mCameraDistance );
 	mCenter				= Vec3f::zero();
-	mUp					= Vec3f::yAxis();
+	mUp					= Vec3f::yAxis()*-1;
 	mCam.setPerspective( 75.0f, getWindowAspectRatio(), 5.0f, 5000.0f );
 	
 	// Initialize the OpenCV input (Below added RS 2010-11-15)
@@ -148,7 +151,14 @@ void BoidsApp::update()
 	mEye	= Vec3f( 0.0f, 0.0f, mCameraDistance );
 	mCam.lookAt( mEye, mCenter, mUp );
 	gl::setMatrices( mCam );
-	gl::rotate( mSceneRotation );
+	gl::rotate( mSceneRotation);
+	
+	// CUBE CODE
+
+	glEnable( GL_TEXTURE_2D );
+	gl::enableDepthRead();
+	gl::enableDepthWrite();	
+	//
 	
 
 	if (checkTime()) {
@@ -163,9 +173,11 @@ void BoidsApp::update()
 		cv::cvtColor(input,gray,CV_RGB2GRAY);
 		cv::threshold( gray, output, cvThreshholdLevel, 255, CV_8U );
 		
-		ci::Surface surface = fromOcv(output);
 		
-		ci::Surface::Iter pixelIterator = surface.getIter(Area(0,0,10,10));
+		
+//		ci::Surface surface = fromOcv(output);
+		
+//		ci::Surface::Iter pixelIterator = surface.getIter(Area(0,0,10,10));
 		//for (pixelIterator; pixelIterator != pixelIterator.; <#increment#>) {
 //			statements
 //		}
@@ -176,34 +188,45 @@ void BoidsApp::update()
 //		}
 		
 		texture = gl::Texture( fromOcv( output ) );
+		//texture = gl::Texture( capture.getSurface() );
+
 	}	 
 	
 }
+
+
+
+
 
 void BoidsApp::draw()
 {	
 	gl::clear( Color( 0, 0, 0 ), true );
 	gl::enableDepthRead();
 	gl::enableDepthWrite();
-	
-	gl::color( ColorA( 1.0f, 1.0f, 1.0f, 1.0f) );
-	if( texture )
-		gl::draw( texture );
-	
-	gl::color( ColorA( 1.0f, 1.0f, 1.0f, 1.0f ) );
+
 	flock_one.draw();
-	
-	gl::color( ColorA( 1.0f, 1.0f, 1.0f, 1.0f ) );
 	flock_two.draw();
+	drawCapture();
 	
 	if( mSaveFrames ){
 		writeImage( getHomeDirectory() + "flocking/image_" + toString( getElapsedFrames() ) + ".png", copyWindowSurface() );
 	}
 	
+	
 	// DRAW PARAMS WINDOW
 	params::InterfaceGl::draw();
 }
 
+void BoidsApp::drawCapture(){
+	if( texture){
+		gl::color( ColorA( 1.0f, 1.0f, 1.0f, 1.0f ) );
+		//texture.bind();
+		glPushMatrix();
+		gl::drawCube( Vec3f::zero(), Vec3f( 200.0f, 200.0f, 200.0f ) );
+		glPopMatrix();
+	}
+	
+}
 
 
 bool BoidsApp::checkTime()
