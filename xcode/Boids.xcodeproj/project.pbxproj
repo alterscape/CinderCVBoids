@@ -42,7 +42,6 @@
 		53E3CDFB0E86099300238D2B /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* Boids.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Boids.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		9F467D58128A672800DA5788 /* BoidsApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BoidsApp.h; path = ../src/BoidsApp.h; sourceTree = SOURCE_ROOT; };
 		9F467D73128A698400DA5788 /* Boid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Boid.h; path = ../src/Boid.h; sourceTree = SOURCE_ROOT; };
 		9F467D74128A698400DA5788 /* Boid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Boid.cpp; path = ../src/Boid.cpp; sourceTree = SOURCE_ROOT; };
 		9F467D7A128A6D3600DA5788 /* BoidController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BoidController.h; path = ../src/BoidController.h; sourceTree = SOURCE_ROOT; };
@@ -134,7 +133,6 @@
 			children = (
 				9F467D73128A698400DA5788 /* Boid.h */,
 				9F467D7A128A6D3600DA5788 /* BoidController.h */,
-				9F467D58128A672800DA5788 /* BoidsApp.h */,
 				32CA4F630368D1EE00C91783 /* Boids_Prefix.pch */,
 			);
 			name = Headers;
