@@ -222,7 +222,8 @@ void BoidsApp::drawCapture(){
 		gl::color( ColorA( 1.0f, 1.0f, 1.0f, 1.0f ) );
 		//texture.bind();
 		glPushMatrix();
-		gl::drawCube( Vec3f::zero(), Vec3f( 200.0f, 200.0f, 200.0f ) );
+		glTranslatef(-1*getWindowSize().x/2,  -1*getWindowSize().y/2, 0);
+		gl::draw(texture, getWindowBounds());
 		glPopMatrix();
 	}
 	
