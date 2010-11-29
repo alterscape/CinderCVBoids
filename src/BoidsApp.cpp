@@ -50,7 +50,10 @@ public:
 	Capture				capture;
 	gl::Texture			texture;
 	int					cvThreshholdLevel;
+	Matrix44<float>		imageToScreenMap;
 };
+
+void edgeDetectArea(Surface *surface, Area area);
 
 void BoidsApp::prepareSettings( Settings *settings )
 {
@@ -93,8 +96,7 @@ void BoidsApp::setup()
 	} catch ( ... ) {
 		console() << "Failed to initialize capture device" << std::endl;
 	}
-	cvThreshholdLevel = 128;
-		
+	cvThreshholdLevel = 128;		
 	// CREATE PARTICLE CONTROLLER
 	flock_one.addBoids( NUM_INITIAL_PARTICLES );
 	flock_two.addBoids( NUM_INITIAL_PARTICLES );
@@ -165,6 +167,8 @@ void BoidsApp::update()
 		
 		ci::Surface surface = fromOcv(output);
 		
+		//edgeDetectArea(&surface,Area(0,0,320,240));
+		
 		ci::Surface::Iter pixelIterator = surface.getIter(Area(0,0,10,10));
 		//for (pixelIterator; pixelIterator != pixelIterator.; <#increment#>) {
 //			statements
@@ -175,7 +179,7 @@ void BoidsApp::update()
 //			console() << device_iterator->get()->getName() << std::endl;
 //		}
 		
-		texture = gl::Texture( fromOcv( output ) );
+		texture = gl::Texture( surface );
 	}	 
 	
 }
@@ -204,8 +208,6 @@ void BoidsApp::draw()
 	params::InterfaceGl::draw();
 }
 
-
-
 bool BoidsApp::checkTime()
 {
 	time_t newTime = time(&newTime);
@@ -220,5 +222,29 @@ bool BoidsApp::checkTime()
 		return FALSE;
 	}
 }
+
+void edgeDetectArea( Surface *surface, Area area )
+{
+	// make a copy of the original before we start writing on it
+	Surface inputSurface( surface->clone( area ) );
+	
+	// we'll need to iterate the inputSurface as well as the output surface
+	Surface::ConstIter inputIter( inputSurface.getIter() );
+	Surface::Iter outputIter( surface->getIter( area ) );
+	
+	while( inputIter.line() ) {
+		outputIter.line();
+		while( inputIter.pixel() ) {
+			outputIter.pixel();
+			int32_t sumRed = inputIter.rClamped( 0, -1 ) + inputIter.rClamped( -1, 0 ) + inputIter.r() * -4 + inputIter.rClamped( 1, 0 ) + inputIter.rClamped( 0, 1 );
+			outputIter.r() = constrain<int32_t>( abs( sumRed ), 0, 255 );
+			int32_t sumGreen = inputIter.gClamped( 0, -1 ) + inputIter.gClamped( -1, 0 ) + inputIter.g() * -4 + inputIter.gClamped( 1, 0 ) + inputIter.gClamped( 0, 1 );
+			outputIter.g() = constrain<int32_t>( abs( sumGreen ), 0, 255 );
+			int32_t sumBlue = inputIter.bClamped( 0, -1 ) + inputIter.bClamped( -1, 0 ) + inputIter.b() * -4 + inputIter.bClamped( 1, 0 ) + inputIter.bClamped( 0, 1 );
+			outputIter.b() = constrain<int32_t>( abs( sumBlue ), 0, 255 );
+		}
+	}
+}
+
 
 CINDER_APP_BASIC( BoidsApp, RendererGl )

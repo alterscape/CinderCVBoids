@@ -45,7 +45,8 @@ private:
 	ci::Perlin mPerlin;
 	
 	std::list<Boid>	particles;
-	boost::ptr_list<BoidController> otherControllers;
+	//boost::ptr_list<BoidController> otherControllers;
+	std::list<BoidController*> otherControllers;
 	ci::Vec3f boidCentroid;
 	int numBoids;
 	
