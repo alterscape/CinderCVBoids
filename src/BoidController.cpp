@@ -91,12 +91,12 @@ void BoidController::applyForceToBoids()
 			float distSqrd = mdist.lengthSquared();
 			float zoneRadiusSqrd = zoneRadius*zoneRadius;
 			
-			
+			/*
 			std::cout << "\n\n MOUSE COORD: " << mousePos.x << ", " << mousePos.y;
 			std::cout << "\n BOID COORD: " << p1->pos.x << ", " << p1->pos.y;
 			std::cout << "\n M-B DIST: " << mdist.x << ", " << mdist.y;
 			std::cout << "\n DIST SQR: " << distSqrd;
-			
+			*/
 			
 			
 			

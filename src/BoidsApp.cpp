@@ -35,8 +35,9 @@ public:
 	
 	//Mouse code ///
 	void mouseDown( MouseEvent event );
-	//void mouseDrag( MouseEvent event );
+	void mouseDrag( MouseEvent event );
 	void mouseUp( MouseEvent event );
+	void updateMousePosition(MouseEvent event);
 	////
 	
 	// PARAMS
@@ -210,8 +211,7 @@ void BoidsApp::mouseDown( MouseEvent event )
 	flock_one.mMousePressed = true;
 	flock_two.mMousePressed = true;
 	
-	flock_one.mousePos = Vec3f(-1*((event.getPos().x)-(getWindowSize().x/2)), -1*((getWindowSize().y/2)-(event.getPos().y)), 0.0f);
-	flock_two.mousePos = Vec3f(-1*((event.getPos().x)-(getWindowSize().x/2)), -1*((getWindowSize().y/2)-(event.getPos().y)), 0.0f);
+	BoidsApp::updateMousePosition(event);
 }
 
 void BoidsApp::mouseUp( MouseEvent event )
@@ -219,15 +219,18 @@ void BoidsApp::mouseUp( MouseEvent event )
 	flock_one.mMousePressed = false;
 	flock_two.mMousePressed = false;
 }
-/*
+
 void BoidsApp::mouseDrag( MouseEvent event )
 {
-	flock_one.mousePos = Vec3f((event.getPos().x)-(getWindowSize().x/2), (event.getPos().y)-(getWindowSize().y/2), 0.0f);
-	flock_two.mousePos = Vec3f((event.getPos().x)-(getWindowSize().x/2), (event.getPos().y)-(getWindowSize().y/2), 0.0f);
-	
-	//std::cout << "\n MOUSE COORD" << event.getPos().x << ", " << event.getPos().y;
+	BoidsApp::updateMousePosition(event);
 }
- */
+
+//NOTE: The mouse position is based on a camera viewing from the initialized orientation only. If you ratate the view of the world, the mapping fails...
+void BoidsApp::updateMousePosition(MouseEvent event){
+	flock_one.mousePos = Vec3f(-1*((event.getPos().x)-(getWindowSize().x/2)), -1*((getWindowSize().y/2)-(event.getPos().y)), 0.0f);
+	flock_two.mousePos = Vec3f(-1*((event.getPos().x)-(getWindowSize().x/2)), -1*((getWindowSize().y/2)-(event.getPos().y)), 0.0f);
+}
+ 
 ////
 
 
