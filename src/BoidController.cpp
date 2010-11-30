@@ -76,85 +76,71 @@ void BoidController::applyForceToBoids()
 					p1->acc -= dir;
 					p2->acc += dir;
 				}
+
 			}
 			
+		}
+	
+		//now look for the mouse
+		
+		if (mMousePressed == true) {
+			Vec3f mdist = mousePos - p1->pos;
+			mdist.z = 0.0f;
 			
-			//now look for the mouse
+			//std::cout << "\n MOUSE COORD" << mousePos.x << ", " <<mousePos.y;
 			
-			if (mMousePressed == true) {
-				Vec3f mdist = mousePos - p1->pos;
-				mdist.z = 0.0f;
+			float distSqrd = mdist.lengthSquared();
+			if (distSqrd < (lowerThresh*10) ){			// Uses 10 x separation
+				std::cout << "MOUSE NEAR BOID";
+				float F = ( lowerThresh/distSqrd - 1.0f ) * repelStrength * 100;
+				mdist.normalize();
+				mdist *= F;
 				
-				//std::cout << "\n MOUSE COORD" << mousePos.x << ", " <<mousePos.y;
+				p1->acc += mdist;
+			}
+		}
+		
+		BoidController *controller = otherControllers.front();
+		
+		list<Boid> *otherParticles = &controller->particles;
+		for (list<Boid>::iterator p3 = otherParticles->begin(); p3 != otherParticles->end(); ++p3) {
+			Vec3f dir = p1->pos - p3->pos;
+			float distSqrd = dir.lengthSquared();
+			float zoneRadiusSqrd = zoneRadius * p1->mCrowdFactor * zoneRadius * p3->mCrowdFactor;
+			
+			if( distSqrd < zoneRadiusSqrd ){		// Neighbor is in the zone
+				float per = distSqrd/zoneRadiusSqrd;
+				p1->addNeighborPos( p3->pos );
+				p3->addNeighborPos( p1->pos );
 				
-				float distSqrd = mdist.lengthSquared();
-				if (distSqrd < (lowerThresh*10) ){			// Uses 10 x separation
-					std::cout << "MOUSE NEAR BOID";
-					float F = ( lowerThresh/distSqrd - 1.0f ) * repelStrength * 100;
-					mdist.normalize();
-					mdist *= F;
+				if( per < lowerThresh ){			// Separation
+					float F = ( lowerThresh/per - 1.0f ) * repelStrength;
+					dir.normalize();
+					dir *= F;
 					
-					p1->acc += mdist;
+					p1->acc += dir;
+					p3->acc -= dir;
+				} else if( per < higherThresh ){	// Alignment
+					float threshDelta	= higherThresh - lowerThresh;
+					float adjPer		= ( per - lowerThresh )/threshDelta;
+					float F				= ( 1.0 - ( cos( adjPer * TWO_PI ) * -0.5f + 0.5f ) ) * orientStrength;
+					
+					p1->acc += p3->velNormal * F;
+					p3->acc += p1->velNormal * F;
+					
+				} else {							// Cohesion (prep)
+					float threshDelta	= 1.0f - higherThresh;
+					float adjPer		= ( per - higherThresh )/threshDelta;
+					float F				= ( 1.0 - ( cos( adjPer * TWO_PI ) * -0.5f + 0.5f ) ) * attractStrength;
+					
+					dir.normalize();
+					dir *= F;
+					
+					p1->acc -= dir;
+					p3->acc += dir;
 				}
 			}
 			
-			
-			//now look at the other systems
-			//outer level of iteration loops over the other boid systems
-			//for( boost::ptr_list<BoidController>::iterator controller = otherControllers.begin(); controller != otherControllers.end(); ++controller ){
-			//{
-			//boost::ptr_list<BoidController>::iterator controller = otherControllers.begin();
-			//list<BoidController*>::iterator controller = otherControllers.begin();
-			
-			BoidController *controller = otherControllers.front();
-			
-			list<Boid> *otherParticles = &controller->particles;
-			for (list<Boid>::iterator p3 = otherParticles->begin(); p3 != otherParticles->end(); ++p3) {
-				Vec3f dir = p1->pos - p3->pos;
-				float distSqrd = dir.lengthSquared();
-				float zoneRadiusSqrd = zoneRadius * p1->mCrowdFactor * zoneRadius * p3->mCrowdFactor;
-				
-				if( distSqrd < zoneRadiusSqrd ){		// Neighbor is in the zone
-					float per = distSqrd/zoneRadiusSqrd;
-					p1->addNeighborPos( p3->pos );
-					p3->addNeighborPos( p1->pos );
-					
-					if( per < lowerThresh ){			// Separation
-						float F = ( lowerThresh/per - 1.0f ) * repelStrength;
-						dir.normalize();
-						dir *= F;
-						
-						p1->acc += dir;
-						p3->acc -= dir;
-					} else if( per < higherThresh ){	// Alignment
-						float threshDelta	= higherThresh - lowerThresh;
-						float adjPer		= ( per - lowerThresh )/threshDelta;
-						float F				= ( 1.0 - ( cos( adjPer * TWO_PI ) * -0.5f + 0.5f ) ) * orientStrength;
-						
-						p1->acc += p3->velNormal * F;
-						p3->acc += p1->velNormal * F;
-						
-					} else {							// Cohesion (prep)
-						float threshDelta	= 1.0f - higherThresh;
-						float adjPer		= ( per - higherThresh )/threshDelta;
-						float F				= ( 1.0 - ( cos( adjPer * TWO_PI ) * -0.5f + 0.5f ) ) * attractStrength;
-						
-						dir.normalize();
-						dir *= F;
-						
-						p1->acc -= dir;
-						p3->acc += dir;
-					}
-				}
-				
-			}
-//				list<Boid>::iterator start = otherParticles.begin();
-//				list<Boid>::iterator end = otherParticles.end();
-//				//inner level of iteration loops over the boids in those systems
-//				for (list<Boid>::iterator p3 = start; p3 != end; ++p3) {
-//				}
-					 
-			//}
 		}
 		
 		boidCentroid += p1->pos;
