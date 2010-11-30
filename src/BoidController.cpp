@@ -26,6 +26,8 @@ BoidController::BoidController()
 	
 	centralGravity		= true;
 	flatten				= true;	
+	mMousePressed		= false;
+	
 }
 
 void BoidController::applyForceToBoids()
@@ -75,12 +77,35 @@ void BoidController::applyForceToBoids()
 					p2->acc += dir;
 				}
 			}
+			
+			
+			//now look for the mouse
+			
+			if (mMousePressed == true) {
+				Vec3f mdist = mousePos - p1->pos;
+				mdist.z = 0.0f;
+				
+				//std::cout << "\n MOUSE COORD" << mousePos.x << ", " <<mousePos.y;
+				
+				float distSqrd = mdist.lengthSquared();
+				if (distSqrd < (lowerThresh*10) ){			// Uses 10 x separation
+					std::cout << "MOUSE NEAR BOID";
+					float F = ( lowerThresh/distSqrd - 1.0f ) * repelStrength * 100;
+					mdist.normalize();
+					mdist *= F;
+					
+					p1->acc += mdist;
+				}
+			}
+			
+			
 			//now look at the other systems
 			//outer level of iteration loops over the other boid systems
 			//for( boost::ptr_list<BoidController>::iterator controller = otherControllers.begin(); controller != otherControllers.end(); ++controller ){
 			//{
 			//boost::ptr_list<BoidController>::iterator controller = otherControllers.begin();
 			//list<BoidController*>::iterator controller = otherControllers.begin();
+			
 			BoidController *controller = otherControllers.front();
 			
 			list<Boid> *otherParticles = &controller->particles;

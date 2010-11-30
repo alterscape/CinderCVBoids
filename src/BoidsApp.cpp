@@ -33,6 +33,13 @@ public:
 	void draw();
 	bool checkTime();
 	
+	//Mouse code ///
+	void mouseDown( MouseEvent event );
+	void mouseDrag( MouseEvent event );
+	//void mouseMove( MouseEvent event );
+	void mouseUp( MouseEvent event );
+	////
+	
 	// PARAMS
 	params::InterfaceGl	mParams;
 	
@@ -53,6 +60,7 @@ public:
 	gl::Texture			texture;
 	int					cvThreshholdLevel;
 	Matrix44<float>		imageToScreenMap;
+	
 };
 
 void edgeDetectArea(Surface *surface, Area area);
@@ -154,8 +162,7 @@ void BoidsApp::update()
 	gl::setMatrices( mCam );
 	gl::rotate( mSceneRotation);
 	
-	// CUBE CODE
-
+	// CAMERA CODE
 	glEnable( GL_TEXTURE_2D );
 	gl::enableDepthRead();
 	gl::enableDepthWrite();	
@@ -196,7 +203,28 @@ void BoidsApp::update()
 }
 
 
+// Mouse Code ///
 
+void BoidsApp::mouseDown( MouseEvent event )
+{
+	flock_one.mMousePressed = true;
+	flock_two.mMousePressed = true;
+}
+
+void BoidsApp::mouseUp( MouseEvent event )
+{
+	flock_one.mMousePressed = false;
+	flock_two.mMousePressed = false;
+}
+
+void BoidsApp::mouseDrag( MouseEvent event )
+{
+	flock_one.mousePos = Vec3f(event.getPos().x, event.getPos().y, 0.0f);
+	flock_two.mousePos = Vec3f(event.getPos().x, event.getPos().y, 0.0f);
+	
+	std::cout << "\n MOUSE COORD" << event.getPos().x << ", " << event.getPos().y;
+}
+////
 
 
 void BoidsApp::draw()
@@ -224,7 +252,7 @@ void BoidsApp::drawCapture(){
 		//texture.bind();
 		glPushMatrix();
 		glTranslatef(-1*getWindowSize().x/2,  -1*getWindowSize().y/2, 0);
-		gl::draw(texture, getWindowBounds());
+	//DON'T DRAW CAMERA IMAGE 		gl::draw(texture, getWindowBounds());
 		glPopMatrix();
 	}
 	

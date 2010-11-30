@@ -40,6 +40,10 @@ public:
 	
 	ci::Color baseColor;
 	
+	// mouse
+	bool				mMousePressed;
+	ci::Vec3f				mousePos;
+	
 private:
 	
 	ci::Perlin mPerlin;
