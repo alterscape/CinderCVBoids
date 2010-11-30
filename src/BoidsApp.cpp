@@ -16,7 +16,7 @@
 
 #include <vector>
 
-#define NUM_INITIAL_PARTICLES 120
+#define NUM_INITIAL_PARTICLES 50
 #define NUM_PARTICLES_TO_SPAWN 15
 
 using namespace ci;
@@ -35,8 +35,7 @@ public:
 	
 	//Mouse code ///
 	void mouseDown( MouseEvent event );
-	void mouseDrag( MouseEvent event );
-	//void mouseMove( MouseEvent event );
+	//void mouseDrag( MouseEvent event );
 	void mouseUp( MouseEvent event );
 	////
 	
@@ -168,12 +167,13 @@ void BoidsApp::update()
 	gl::enableDepthWrite();	
 	//
 	
-
+//KEEP FLATTEN ON
+	/*
 	if (checkTime()) {
 		flock_one.flatten = !flock_one.flatten;
 		flock_two.flatten = !flock_two.flatten;
 	}
-
+*/
 	
 	//OpenCV IO
 	if( capture && capture.checkNewFrame() ) {
@@ -209,6 +209,9 @@ void BoidsApp::mouseDown( MouseEvent event )
 {
 	flock_one.mMousePressed = true;
 	flock_two.mMousePressed = true;
+	
+	flock_one.mousePos = Vec3f(-1*((event.getPos().x)-(getWindowSize().x/2)), -1*((getWindowSize().y/2)-(event.getPos().y)), 0.0f);
+	flock_two.mousePos = Vec3f(-1*((event.getPos().x)-(getWindowSize().x/2)), -1*((getWindowSize().y/2)-(event.getPos().y)), 0.0f);
 }
 
 void BoidsApp::mouseUp( MouseEvent event )
@@ -216,14 +219,15 @@ void BoidsApp::mouseUp( MouseEvent event )
 	flock_one.mMousePressed = false;
 	flock_two.mMousePressed = false;
 }
-
+/*
 void BoidsApp::mouseDrag( MouseEvent event )
 {
-	flock_one.mousePos = Vec3f(event.getPos().x, event.getPos().y, 0.0f);
-	flock_two.mousePos = Vec3f(event.getPos().x, event.getPos().y, 0.0f);
+	flock_one.mousePos = Vec3f((event.getPos().x)-(getWindowSize().x/2), (event.getPos().y)-(getWindowSize().y/2), 0.0f);
+	flock_two.mousePos = Vec3f((event.getPos().x)-(getWindowSize().x/2), (event.getPos().y)-(getWindowSize().y/2), 0.0f);
 	
-	std::cout << "\n MOUSE COORD" << event.getPos().x << ", " << event.getPos().y;
+	//std::cout << "\n MOUSE COORD" << event.getPos().x << ", " << event.getPos().y;
 }
+ */
 ////
 
 
