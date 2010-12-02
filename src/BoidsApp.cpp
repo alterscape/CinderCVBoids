@@ -6,6 +6,7 @@
 #include "cinder/Camera.h"
 #include "cinder/Rand.h"
 #include "BoidController.h"
+#include "SilhouetteDetector.h"
 #include "time.h"
 #include "cinder/Surface.h"
 
@@ -16,12 +17,13 @@
 
 #include <vector>
 
-#define NUM_INITIAL_PARTICLES 120
+#define NUM_INITIAL_PARTICLES 1
 #define NUM_PARTICLES_TO_SPAWN 15
 
 using namespace ci;
 using namespace ci::app;
 using namespace std;
+using namespace boost;
 
 class BoidsApp : public AppBasic {
 public:
@@ -53,6 +55,10 @@ public:
 	gl::Texture			texture;
 	int					cvThreshholdLevel;
 	Matrix44<float>		imageToScreenMap;
+	
+private:
+	SilhouetteDetector	*silhouetteDetector;
+	vector<Vec2i_ptr_vec> * polygons;
 };
 
 void edgeDetectArea(Surface *surface, Area area);
@@ -72,13 +78,12 @@ void BoidsApp::setup()
 	mIsRenderingPrint	= false;
 	changeInterval		= 10.0;
 	time(&lastChange);
-
 	
 	// SETUP CAMERA
 	mCameraDistance		= 350.0f;
 	mEye				= Vec3f( 0.0f, 0.0f, mCameraDistance );
 	mCenter				= Vec3f::zero();
-	mUp					= Vec3f::yAxis()*-1;
+	mUp					= Vec3f::yAxis();
 	mCam.setPerspective( 75.0f, getWindowAspectRatio(), 5.0f, 5000.0f );
 	
 	// Initialize the OpenCV input (Below added RS 2010-11-15)
@@ -95,10 +100,11 @@ void BoidsApp::setup()
 		
 		capture = Capture(320,240);
 		capture.start();
+		silhouetteDetector = new SilhouetteDetector(320,240);
 	} catch ( ... ) {
 		console() << "Failed to initialize capture device" << std::endl;
 	}
-	cvThreshholdLevel = 128;		
+	cvThreshholdLevel = 45;		
 	// CREATE PARTICLE CONTROLLER
 	flock_one.addBoids( NUM_INITIAL_PARTICLES );
 	flock_two.addBoids( NUM_INITIAL_PARTICLES );
@@ -125,8 +131,15 @@ void BoidsApp::setup()
 	mParams.addParam( "Repel Strength", &flock_one.repelStrength, "min=0.001 max=0.1 step=0.001 keyIncr=r keyDecr=R" );
 	mParams.addParam( "Orient Strength", &flock_one.orientStrength, "min=0.001 max=0.1 step=0.001 keyIncr=o keyDecr=O" );
 	mParams.addSeparator();
-	mParams.addParam( "CV Threshhold", &cvThreshholdLevel, "min=0 max=255 step=1 keyIncr=t keyDecr=T" );
+	mParams.addParam( "CV Threshhold", &silhouetteDetector->cvThresholdLevel, "min=0 max=255 step=1 keyIncr=t keyDecr=T" );
 	
+	//setup transformation from camera space to opengl world space
+	imageToScreenMap.setToIdentity();
+	//imageToScreenMap.translate(Vec3f(-1*getWindowSize().x/2,  -1*getWindowSize().y/2, 0));	//translate over and down
+	imageToScreenMap.translate(Vec3f(getWindowSize().x/2, getWindowSize().y/2, 0));	//translate over and down
+
+	imageToScreenMap.scale(Vec3f(-1*getWindowSize().x/320.0f, -1*getWindowSize().y/240.0f,1.0f));	//scale up
+	polygons = new vector<Vec2i_ptr_vec>();
 }
 
 void BoidsApp::keyDown( KeyEvent event )
@@ -140,7 +153,39 @@ void BoidsApp::keyDown( KeyEvent event )
 
 
 void BoidsApp::update()
-{
+{	
+	mEye	= Vec3f( 0.0f, 0.0f, mCameraDistance );
+	mCam.lookAt( mEye, mCenter, mUp );
+	gl::setMatrices( mCam );
+	gl::rotate( mSceneRotation);
+	
+	// CUBE CODE
+	glEnable( GL_TEXTURE_2D );
+	gl::enableDepthRead();
+	gl::enableDepthWrite();	
+	//
+	
+
+	//if (checkTime()) {
+//		flock_one.flatten = !flock_one.flatten;
+//		flock_two.flatten = !flock_two.flatten;
+//	}
+
+	
+	//OpenCV IO
+	//Only do OpenCV business if capture device is open and a new frame is ready
+	if( capture && capture.checkNewFrame() ) {
+		cv::Mat input( toOcv( capture.getSurface() ) );				
+		polygons->clear();
+		ci::Surface captureSurface = capture.getSurface();
+		ci::Surface outputSurface = captureSurface; //inefficient and maybe broken
+		silhouetteDetector->processSurface(&captureSurface,polygons,&outputSurface);	//this only works because processSurface doesn't retain either pointer
+
+		texture = outputSurface;
+		cout << "frame!" << endl;
+		flock_one.applySilhouetteToBoids(polygons,&imageToScreenMap);
+	}	 
+		
 	flock_one.applyForceToBoids();
 	if( flock_one.centralGravity ) flock_one.pullToCenter( mCenter );
 	flock_one.update();
@@ -149,55 +194,7 @@ void BoidsApp::update()
 	if( flock_two.centralGravity) flock_two.pullToCenter( mCenter);
 	flock_two.update();
 	
-	mEye	= Vec3f( 0.0f, 0.0f, mCameraDistance );
-	mCam.lookAt( mEye, mCenter, mUp );
-	gl::setMatrices( mCam );
-	gl::rotate( mSceneRotation);
-	
-	// CUBE CODE
-
-	glEnable( GL_TEXTURE_2D );
-	gl::enableDepthRead();
-	gl::enableDepthWrite();	
-	//
-	
-
-	if (checkTime()) {
-		flock_one.flatten = !flock_one.flatten;
-		flock_two.flatten = !flock_two.flatten;
-	}
-
-	
-	//OpenCV IO
-	if( capture && capture.checkNewFrame() ) {
-		cv::Mat input( toOcv( capture.getSurface() ) ), gray, output;
-		cv::cvtColor(input,gray,CV_RGB2GRAY);
-		cv::threshold( gray, output, cvThreshholdLevel, 255, CV_8U );
-		
-		ci::Surface surface = fromOcv(output);
-		
-		//ci::Surface::Iter pixelIterator = surface.getIter(Area(0,0,10,10));
-		
-		
-		
-//		ci::Surface::Iter pixelIterator = surface.getIter(Area(0,0,10,10));
-		//for (pixelIterator; pixelIterator != pixelIterator.; <#increment#>) {
-//			statements
-//		}
-		//std::vector<boost::shared_ptr<Capture::Device> >::iterator device_iterator;
-//		for(device_iterator=devices.begin(); device_iterator!=devices.end(); device_iterator++)
-//		{
-//			console() << device_iterator->get()->getName() << std::endl;
-//		}
-		
-		texture = gl::Texture( surface );
-	}	 
-	
 }
-
-
-
-
 
 void BoidsApp::draw()
 {	
@@ -208,7 +205,25 @@ void BoidsApp::draw()
 	flock_one.draw();
 	flock_two.draw();
 	drawCapture();
-	
+
+	//DRAW THE POLYGONS
+	//glPushMatrix();
+	gl::pushModelView();
+	gl::multModelView(imageToScreenMap);
+	//glTranslatef(-1*getWindowSize().x/2,  -1*getWindowSize().y/2, 0.1f);
+	//glScalef(getWindowSize().x/320.0f, getWindowSize().y/240.0f,1.0);	//scale up to fill the screen, same as for the video image
+
+	glColor3f(1.0f,0.0f,0.0f);
+	glLineWidth(5.0f);
+	for(vector<Vec2i_ptr_vec>::iterator polygon = polygons->begin(); polygon!=polygons->end();++polygon) {
+		glBegin(GL_LINE_STRIP);
+		for(vector<Vec2i_ptr>::iterator point = polygon->get()->begin(); point!=polygon->get()->end();++point) {
+			glVertex2f(point->get()->x,point->get()->y);
+		}
+		glEnd();
+	}
+	gl::popModelView();
+		
 	if( mSaveFrames ){
 		writeImage( getHomeDirectory() + "flocking/image_" + toString( getElapsedFrames() ) + ".png", copyWindowSurface() );
 	}
@@ -222,12 +237,11 @@ void BoidsApp::drawCapture(){
 	if( texture){
 		gl::color( ColorA( 1.0f, 1.0f, 1.0f, 1.0f ) );
 		//texture.bind();
-		glPushMatrix();
-		glTranslatef(-1*getWindowSize().x/2,  -1*getWindowSize().y/2, 0);
-		gl::draw(texture, getWindowBounds());
-		glPopMatrix();
+		gl::pushModelView();
+		gl::multModelView(imageToScreenMap);
+		gl::draw(texture);
+		gl::popModelView();
 	}
-	
 }
 
 
@@ -245,29 +259,5 @@ bool BoidsApp::checkTime()
 		return FALSE;
 	}
 }
-
-void edgeDetectArea( Surface *surface, Area area )
-{
-	// make a copy of the original before we start writing on it
-	Surface inputSurface( surface->clone( area ) );
-	
-	// we'll need to iterate the inputSurface as well as the output surface
-	Surface::ConstIter inputIter( inputSurface.getIter() );
-	Surface::Iter outputIter( surface->getIter( area ) );
-	
-	while( inputIter.line() ) {
-		outputIter.line();
-		while( inputIter.pixel() ) {
-			outputIter.pixel();
-			int32_t sumRed = inputIter.rClamped( 0, -1 ) + inputIter.rClamped( -1, 0 ) + inputIter.r() * -4 + inputIter.rClamped( 1, 0 ) + inputIter.rClamped( 0, 1 );
-			outputIter.r() = constrain<int32_t>( abs( sumRed ), 0, 255 );
-			int32_t sumGreen = inputIter.gClamped( 0, -1 ) + inputIter.gClamped( -1, 0 ) + inputIter.g() * -4 + inputIter.gClamped( 1, 0 ) + inputIter.gClamped( 0, 1 );
-			outputIter.g() = constrain<int32_t>( abs( sumGreen ), 0, 255 );
-			int32_t sumBlue = inputIter.bClamped( 0, -1 ) + inputIter.bClamped( -1, 0 ) + inputIter.b() * -4 + inputIter.bClamped( 1, 0 ) + inputIter.bClamped( 0, 1 );
-			outputIter.b() = constrain<int32_t>( abs( sumBlue ), 0, 255 );
-		}
-	}
-}
-
 
 CINDER_APP_BASIC( BoidsApp, RendererGl )

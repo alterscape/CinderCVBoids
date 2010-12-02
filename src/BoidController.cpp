@@ -12,7 +12,7 @@
 #include "BoidController.h"
 
 using namespace ci;
-using std::list;
+using namespace std;
 
 BoidController::BoidController()
 {
@@ -117,23 +117,19 @@ void BoidController::applyForceToBoids()
 					p3->acc += dir;
 				}
 			}
-			
 		}
-		//				list<Boid>::iterator start = otherParticles.begin();
-		//				list<Boid>::iterator end = otherParticles.end();
-		//				//inner level of iteration loops over the boids in those systems
-		//				for (list<Boid>::iterator p3 = start; p3 != end; ++p3) {
-		//				}
+	
+		boidCentroid += p1->pos;
 		
+		//respond to silhouettes
+		//for( CvSeq* c=silhouettes; c!=NULL; c=c->h_next ){
+			//do nothing yet
 		//}
 		
-		boidCentroid += p1->pos;
-	
 		if( p1->mNumNeighbors > 0 ){ // Cohesion 
 			Vec3f neighborAveragePos = ( p1->mNeighborPos/(float)p1->mNumNeighbors );
 			p1->acc += ( neighborAveragePos - p1->pos ) * attractStrength;	
 		}
-		 
 		
 		// ADD PERLIN NOISE INFLUENCE
 		float scale = 0.005f;
@@ -141,7 +137,6 @@ void BoidController::applyForceToBoids()
 		Vec3f perlin = mPerlin.dfBm( p1->pos * scale ) * multi;
 		p1->acc += perlin;
 		
-				
 		// CHECK WHETHER THERE IS ANY PARTICLE/PREDATOR INTERACTION
 		/*float eatDistSqrd = 50.0f;
 		float predatorZoneRadiusSqrd = zoneRadius * zoneRadius * 5.0f;
@@ -168,6 +163,56 @@ void BoidController::applyForceToBoids()
 		
 	}
 	boidCentroid /= (float)numBoids;
+}
+
+void BoidController::applySilhouetteToBoids(std::vector<Vec2i_ptr_vec> * polygons, ci::Matrix44<float> *imageToWorldMap)
+{
+	Matrix44<float> worldToImage = Matrix44<float>(*imageToWorldMap);
+	worldToImage.invert();
+	for( list<Boid>::iterator p1 = particles.begin(); p1 != particles.end(); ++p1 ){	//for each boid
+		Vec3f xformedPos = worldToImage.transformVec(p1->pos);
+				xformedPos.z = 0.0f;	//Force Z to be 0 for these calculations.
+		float closestDistanceSquared = 9999999.9f;
+		Vec3f closestPoint;
+		cout << "checking " << polygons->size() << " polygons!" << endl; 
+		for(vector<Vec2i_ptr_vec>::iterator polygon = polygons->begin(); polygon!=polygons->end();++polygon) {
+			cout<< "checking a polygon with " << polygon->get()->size() << " points!" << endl;
+			//the two-iterator plan, as per http://stackoverflow.com/questions/261271/compare-two-consecutive-elements-in-stdlist
+			vector<Vec2i_ptr>::iterator secondPoint = polygon->get()->begin(), end = polygon->get()->end();
+			if (secondPoint != end) {
+				for(vector<Vec2i_ptr>::iterator firstPoint = secondPoint++;
+					secondPoint!=end;
+					++firstPoint, ++secondPoint) 
+				{
+					cout << "checking a pair of points!" << endl;
+					//glVertex2f(point->get()->x,point->get()->y);
+					ci::Vec3f pt1 = ci::Vec3f(firstPoint->get()->x,firstPoint->get()->y,0.0f);
+					ci::Vec3f pt2 = ci::Vec3f(secondPoint->get()->x,secondPoint->get()->y,0.0f);
+					ci::Vec3f distance = getClosestPointToSegment(&pt1,&pt2,&xformedPos);
+					if(distance.lengthSquared() < closestDistanceSquared) {
+						cout << "this point is closer!" << endl;
+						closestDistanceSquared = distance.lengthSquared();
+						closestPoint = distance;
+					}
+				}
+			}
+		}
+		float silThresh = 1000.0f;
+		float repelStrength = 5.0f;
+		if (closestDistanceSquared < silThresh) {	//FIXME magic numbers suck
+			float per = closestDistanceSquared/silThresh;
+			Vec3f distance = xformedPos-closestPoint;
+			cout << "original pos: (" << p1->pos.x << "," << p1->pos.y << "," << p1->pos.z << "; xformed pos: (" << xformedPos.x << "," << xformedPos.y << "," << xformedPos.z << "); distance to closest^2: " << closestDistanceSquared <<endl;
+			std::cout << "distance, for example: " << distance.length() << "; point: (" << closestPoint.x << "," << closestPoint.y << ")" << std::endl;
+			
+			float F = ( 1.0f - per ) * repelStrength;
+			distance.normalize();
+			distance *= F;
+			std::cout << "repelling from silhouette with vector: (" << distance.x << ","<< distance.y << "," << distance.z << "); magnitude: " << F << std::endl;
+			p1->acc += distance;
+		}
+		
+	}
 }
 
 
@@ -248,3 +293,5 @@ void BoidController::addOtherFlock(BoidController *flock)
 {
 	otherControllers.push_back(flock);
 }
+
+
