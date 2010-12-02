@@ -170,7 +170,7 @@ void BoidController::applySilhouetteToBoids(std::vector<Vec2i_ptr_vec> * polygon
 	Matrix44<float> worldToImage = Matrix44<float>(*imageToWorldMap);
 	worldToImage.invert();
 	for( list<Boid>::iterator p1 = particles.begin(); p1 != particles.end(); ++p1 ){	//for each boid
-		Vec3f xformedPos = worldToImage.transformVec(p1->pos);
+		Vec3f xformedPos = worldToImage.transformPoint(p1->pos);
 				xformedPos.z = 0.0f;	//Force Z to be 0 for these calculations.
 		float closestDistanceSquared = 9999999.9f;
 		Vec3f closestPoint;
@@ -184,7 +184,7 @@ void BoidController::applySilhouetteToBoids(std::vector<Vec2i_ptr_vec> * polygon
 					secondPoint!=end;
 					++firstPoint, ++secondPoint) 
 				{
-					cout << "checking a pair of points!" << endl;
+					//cout << "checking a pair of points!" << endl;
 					//glVertex2f(point->get()->x,point->get()->y);
 					ci::Vec3f pt1 = ci::Vec3f(firstPoint->get()->x,firstPoint->get()->y,0.0f);
 					ci::Vec3f pt2 = ci::Vec3f(secondPoint->get()->x,secondPoint->get()->y,0.0f);
@@ -197,18 +197,19 @@ void BoidController::applySilhouetteToBoids(std::vector<Vec2i_ptr_vec> * polygon
 				}
 			}
 		}
+		p1->closestSilhouettePoint = imageToWorldMap->transformPoint(closestPoint);
 		float silThresh = 1000.0f;
 		float repelStrength = 5.0f;
 		if (closestDistanceSquared < silThresh) {	//FIXME magic numbers suck
 			float per = closestDistanceSquared/silThresh;
 			Vec3f distance = xformedPos-closestPoint;
-			cout << "original pos: (" << p1->pos.x << "," << p1->pos.y << "," << p1->pos.z << "; xformed pos: (" << xformedPos.x << "," << xformedPos.y << "," << xformedPos.z << "); distance to closest^2: " << closestDistanceSquared <<endl;
-			std::cout << "distance, for example: " << distance.length() << "; point: (" << closestPoint.x << "," << closestPoint.y << ")" << std::endl;
+			//cout << "original pos: (" << p1->pos.x << "," << p1->pos.y << "," << p1->pos.z << "; xformed pos: (" << xformedPos.x << "," << xformedPos.y << "," << xformedPos.z << "); distance to closest^2: " << closestDistanceSquared <<endl;
+			//std::cout << "distance, for example: " << distance.length() << "; point: (" << closestPoint.x << "," << closestPoint.y << ")" << std::endl;
 			
 			float F = ( 1.0f - per ) * repelStrength;
 			distance.normalize();
 			distance *= F;
-			std::cout << "repelling from silhouette with vector: (" << distance.x << ","<< distance.y << "," << distance.z << "); magnitude: " << F << std::endl;
+			//std::cout << "repelling from silhouette with vector: (" << distance.x << ","<< distance.y << "," << distance.z << "); magnitude: " << F << std::endl;
 			p1->acc += distance;
 		}
 		

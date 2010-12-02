@@ -17,7 +17,7 @@
 
 #include <vector>
 
-#define NUM_INITIAL_PARTICLES 1
+#define NUM_INITIAL_PARTICLES 50
 #define NUM_PARTICLES_TO_SPAWN 15
 
 using namespace ci;
@@ -178,12 +178,12 @@ void BoidsApp::update()
 		cv::Mat input( toOcv( capture.getSurface() ) );				
 		polygons->clear();
 		ci::Surface captureSurface = capture.getSurface();
-		ci::Surface outputSurface = captureSurface; //inefficient and maybe broken
+		ci::Surface outputSurface = captureSurface;
 		silhouetteDetector->processSurface(&captureSurface,polygons,&outputSurface);	//this only works because processSurface doesn't retain either pointer
 
 		texture = outputSurface;
-		cout << "frame!" << endl;
 		flock_one.applySilhouetteToBoids(polygons,&imageToScreenMap);
+		flock_two.applySilhouetteToBoids(polygons,&imageToScreenMap);
 	}	 
 		
 	flock_one.applyForceToBoids();
@@ -210,6 +210,7 @@ void BoidsApp::draw()
 	//glPushMatrix();
 	gl::pushModelView();
 	gl::multModelView(imageToScreenMap);
+	glTranslatef(0.0f,0.0f,0.1f);
 	//glTranslatef(-1*getWindowSize().x/2,  -1*getWindowSize().y/2, 0.1f);
 	//glScalef(getWindowSize().x/320.0f, getWindowSize().y/240.0f,1.0);	//scale up to fill the screen, same as for the video image
 
