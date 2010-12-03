@@ -33,6 +33,7 @@ Boid::Boid( Vec3f pos, Vec3f vel, bool followed, BoidController* parent )
 	
 	mIsDead			= false;
 	mFollowed		= followed;
+	drawClosestSilhouettePoint = true;
 }
 
 void Boid::pullToCenter( const Vec3f &center )
@@ -100,7 +101,14 @@ void Boid::draw()
 {
 	glColor4f( mColor );
 	gl::drawVector( pos - velNormal * mLength, pos - velNormal * mLength * 0.75f, mLength * 0.7f, mRadius );
-	
+	if(drawClosestSilhouettePoint) {
+		glColor3f(0.0f,1.0f,0.0f);
+		glBegin(GL_LINES);
+		glLineWidth(1.0f);
+		gl::vertex(pos);
+		gl::vertex(closestSilhouettePoint);
+		glEnd();
+	}
 	
 }
 

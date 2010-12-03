@@ -32,6 +32,9 @@ public:
 	ci::Vec3f	velNormal;
 	ci::Vec3f	acc;
 	
+	//debug
+	ci::Vec3f	closestSilhouettePoint;
+	
 	ci::Vec3f	mNeighborPos;
 	int			mNumNeighbors;
 	
@@ -47,6 +50,7 @@ public:
 	
 	bool		mIsDead;
 	bool		mFollowed;
+	bool		drawClosestSilhouettePoint;
 	
 	BoidController *parent;
 };

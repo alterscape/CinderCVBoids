@@ -21,6 +21,7 @@
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		9F467D7C128A6D3600DA5788 /* BoidController.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9F467D7B128A6D3600DA5788 /* BoidController.cpp */; };
 		9F467E88128B467800DA5788 /* Boid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9F467D74128A698400DA5788 /* Boid.cpp */; };
+		9F54352C12A6ADCC00ACA43A /* SilhouetteDetector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9F54352B12A6ADCC00ACA43A /* SilhouetteDetector.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -46,6 +47,8 @@
 		9F467D74128A698400DA5788 /* Boid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Boid.cpp; path = ../src/Boid.cpp; sourceTree = SOURCE_ROOT; };
 		9F467D7A128A6D3600DA5788 /* BoidController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BoidController.h; path = ../src/BoidController.h; sourceTree = SOURCE_ROOT; };
 		9F467D7B128A6D3600DA5788 /* BoidController.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BoidController.cpp; path = ../src/BoidController.cpp; sourceTree = SOURCE_ROOT; };
+		9F54352A12A6ADCC00ACA43A /* SilhouetteDetector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SilhouetteDetector.h; sourceTree = "<group>"; };
+		9F54352B12A6ADCC00ACA43A /* SilhouetteDetector.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SilhouetteDetector.cpp; sourceTree = "<group>"; };
 		9F586B1C1292256A005B1ED6 /* CinderOpenCV.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CinderOpenCV.h; path = ../../blocks/opencv/include/CinderOpenCV.h; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -76,6 +79,7 @@
 				00BAE6590E7ED9C10018A608 /* BoidsApp.cpp */,
 				9F467D74128A698400DA5788 /* Boid.cpp */,
 				9F467D7B128A6D3600DA5788 /* BoidController.cpp */,
+				9F54352B12A6ADCC00ACA43A /* SilhouetteDetector.cpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -134,6 +138,7 @@
 				9F467D73128A698400DA5788 /* Boid.h */,
 				9F467D7A128A6D3600DA5788 /* BoidController.h */,
 				32CA4F630368D1EE00C91783 /* Boids_Prefix.pch */,
+				9F54352A12A6ADCC00ACA43A /* SilhouetteDetector.h */,
 			);
 			name = Headers;
 			sourceTree = "<group>";
@@ -244,6 +249,7 @@
 				9F467E88128B467800DA5788 /* Boid.cpp in Sources */,
 				9F467D7C128A6D3600DA5788 /* BoidController.cpp in Sources */,
 				00BAE65A0E7ED9C10018A608 /* BoidsApp.cpp in Sources */,
+				9F54352C12A6ADCC00ACA43A /* SilhouetteDetector.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

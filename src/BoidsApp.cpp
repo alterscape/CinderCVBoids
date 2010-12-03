@@ -168,7 +168,7 @@ void BoidsApp::update()
 	gl::enableDepthWrite();	
 	//
 	
-//KEEP FLATTEN ON
+//KEEP FLATTEN ON, by commenting out next condition.
 	/*
 	if (checkTime()) {
 		flock_one.flatten = !flock_one.flatten;
@@ -225,13 +225,13 @@ void BoidsApp::mouseDrag( MouseEvent event )
 	BoidsApp::updateMousePosition(event);
 }
 
-//NOTE: The mouse position is based on a camera viewing from the initialized orientation only. If you ratate the view of the world, the mapping fails...
+//NOTE: The mouse position is based on a camera viewing from the initialized orientation only. If you rotate the view of the world, the mapping fails...
 void BoidsApp::updateMousePosition(MouseEvent event){
 	flock_one.mousePos = Vec3f(-1*((event.getPos().x)-(getWindowSize().x/2)), -1*((getWindowSize().y/2)-(event.getPos().y)), 0.0f);
 	flock_two.mousePos = Vec3f(-1*((event.getPos().x)-(getWindowSize().x/2)), -1*((getWindowSize().y/2)-(event.getPos().y)), 0.0f);
 }
  
-////
+// END MOUSE CODE//
 
 
 void BoidsApp::draw()
@@ -259,7 +259,7 @@ void BoidsApp::drawCapture(){
 		//texture.bind();
 		glPushMatrix();
 		glTranslatef(-1*getWindowSize().x/2,  -1*getWindowSize().y/2, 0);
-	//DON'T DRAW CAMERA IMAGE 		gl::draw(texture, getWindowBounds());
+		gl::draw(texture, getWindowBounds());
 		glPopMatrix();
 	}
 	
