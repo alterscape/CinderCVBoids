@@ -108,8 +108,6 @@ void BoidsApp::setup()
 	// CREATE PARTICLE CONTROLLER
 	flock_one.addBoids( NUM_INITIAL_PARTICLES );
 	flock_two.addBoids( NUM_INITIAL_PARTICLES );
-	//flock_one.baseColor = ColorA( CM_HSV, 0, 0.19, 0.23);		//Muted red
-	//flock_two.baseColor = ColorA( CM_HSV, 0.94, 0.26, 0.23);	//Muted blue
 	flock_one.baseColor = ColorA( CM_RGB, 1.0, 0.0, 0.0);
 	flock_two.baseColor = ColorA( CM_RGB, 0.0, 0.0, 1.0);
 	
@@ -202,6 +200,12 @@ void BoidsApp::draw()
 	gl::enableDepthRead();
 	gl::enableDepthWrite();
 
+	glColor3f(1.0f,0.0f,0.0f);
+	glBegin(GL_POINTS);
+	glVertex3f(10.0f,0.0f,1.0f);
+	glColor3f(0.0f,1.0f,0.0f);
+	glVertex3f(0.0f,10.0f,1.0f);
+	glEnd();
 	flock_one.draw();
 	flock_two.draw();
 	drawCapture();

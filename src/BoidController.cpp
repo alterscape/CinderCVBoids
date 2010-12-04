@@ -170,13 +170,13 @@ void BoidController::applySilhouetteToBoids(std::vector<Vec2i_ptr_vec> * polygon
 	Matrix44<float> worldToImage = Matrix44<float>(*imageToWorldMap);
 	worldToImage.invert();
 	for( list<Boid>::iterator p1 = particles.begin(); p1 != particles.end(); ++p1 ){	//for each boid
-		Vec3f xformedPos = worldToImage.transformPoint(p1->pos);
-				xformedPos.z = 0.0f;	//Force Z to be 0 for these calculations.
+		Vec3f xformedPos = worldToImage.transformPoint(p1->pos);	//transform world coordinates into image coordinates
+		xformedPos.z = 0.0f;	//Force Z to be 0 for these calculations.
 		float closestDistanceSquared = 9999999.9f;
 		Vec3f closestPoint;
-		cout << "checking " << polygons->size() << " polygons!" << endl; 
+		//cout << "checking " << polygons->size() << " polygons!" << endl; 
 		for(vector<Vec2i_ptr_vec>::iterator polygon = polygons->begin(); polygon!=polygons->end();++polygon) {
-			cout<< "checking a polygon with " << polygon->get()->size() << " points!" << endl;
+			//cout<< "checking a polygon with " << polygon->get()->size() << " points!" << endl;
 			//the two-iterator plan, as per http://stackoverflow.com/questions/261271/compare-two-consecutive-elements-in-stdlist
 			vector<Vec2i_ptr>::iterator secondPoint = polygon->get()->begin(), end = polygon->get()->end();
 			if (secondPoint != end) {
