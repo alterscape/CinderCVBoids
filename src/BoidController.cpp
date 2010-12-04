@@ -16,7 +16,7 @@ using namespace std;
 
 BoidController::BoidController()
 {
-	mPerlin = Perlin( 4 );
+	mPerlin				= Perlin( 4 );
 	zoneRadius			= 80.0f;
 	lowerThresh			= 0.5f;
 	higherThresh		= 0.8f;
@@ -26,17 +26,22 @@ BoidController::BoidController()
 	
 	centralGravity		= true;
 	flatten				= true;	
+	mMousePressed		= false;
+	
 }
 
 void BoidController::applyForceToBoids()
 {
+	
 	if(lowerThresh > higherThresh ) higherThresh = lowerThresh;
 	
 	boidCentroid = Vec3f::zero();
 	numBoids = particles.size();
 	
-	for( list<Boid>::iterator p1 = particles.begin(); p1 != particles.end(); ++p1 ){
+	// for ech boid in this controller (?)
+	for(list<Boid>::iterator p1 = particles.begin(); p1 != particles.end(); ++p1 ){
 		
+		//compare to the other boids in this controller
 		list<Boid>::iterator p2 = p1;
 		for( ++p2; p2 != particles.end(); ++p2 ) {
 			Vec3f dir = p1->pos - p2->pos;
@@ -74,9 +79,41 @@ void BoidController::applyForceToBoids()
 					p1->acc -= dir;
 					p2->acc += dir;
 				}
-			}			
+			}
 		}
 		
+		//now look for the mouse
+		
+		if (mMousePressed == true) {
+			
+			Vec3f mdist = mousePos - p1->pos;
+			mdist.z = 0.0f;
+			float distSqrd = mdist.lengthSquared();
+			float zoneRadiusSqrd = zoneRadius*zoneRadius;
+			
+			/*
+			std::cout << "\n\n MOUSE COORD: " << mousePos.x << ", " << mousePos.y;
+			std::cout << "\n BOID COORD: " << p1->pos.x << ", " << p1->pos.y;
+			std::cout << "\n M-B DIST: " << mdist.x << ", " << mdist.y;
+			std::cout << "\n DIST SQR: " << distSqrd;
+			*/
+			
+			
+			
+			if (distSqrd < zoneRadiusSqrd){			// Uses zone radius squared
+				//std::cout << "  MOUSE NEAR BOID!!  ";
+				//std::cout << "\n BOID acc before: " << p1->acc.x << ", " << p1->acc.y;
+				
+				float F = ( zoneRadius/distSqrd - 1.0f ) * repelStrength * 1000;
+				mdist.normalize();
+				mdist *= F;
+		 
+				p1->acc += mdist;
+				//std::cout << "\n BOID acc after: " << p1->acc.x << ", " << p1->acc.y << "\n";
+			}
+		}
+		
+		//now look at the boids in the other controller (?)
 		BoidController *controller = otherControllers.front();
 		
 		list<Boid> *otherParticles = &controller->particles;
@@ -118,6 +155,7 @@ void BoidController::applyForceToBoids()
 				}
 			}
 		}
+
 	
 		boidCentroid += p1->pos;
 		
@@ -125,6 +163,7 @@ void BoidController::applyForceToBoids()
 		//for( CvSeq* c=silhouettes; c!=NULL; c=c->h_next ){
 			//do nothing yet
 		//}
+
 		
 		if( p1->mNumNeighbors > 0 ){ // Cohesion 
 			Vec3f neighborAveragePos = ( p1->mNeighborPos/(float)p1->mNumNeighbors );
@@ -231,7 +270,7 @@ void BoidController::update()
 		if( p->mIsDead ){
 			p = particles.erase( p );
 		} else {
-			p->update( flatten );
+			p->update( flatten);
 			++p;
 		}
 	}
