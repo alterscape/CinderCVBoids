@@ -47,8 +47,8 @@
 		9F467D74128A698400DA5788 /* Boid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Boid.cpp; path = ../src/Boid.cpp; sourceTree = SOURCE_ROOT; };
 		9F467D7A128A6D3600DA5788 /* BoidController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BoidController.h; path = ../src/BoidController.h; sourceTree = SOURCE_ROOT; };
 		9F467D7B128A6D3600DA5788 /* BoidController.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BoidController.cpp; path = ../src/BoidController.cpp; sourceTree = SOURCE_ROOT; };
-		9F54352A12A6ADCC00ACA43A /* SilhouetteDetector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SilhouetteDetector.h; sourceTree = "<group>"; };
-		9F54352B12A6ADCC00ACA43A /* SilhouetteDetector.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SilhouetteDetector.cpp; sourceTree = "<group>"; };
+		9F54352A12A6ADCC00ACA43A /* src */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = folder; name = src; path = ../src; sourceTree = "<group>"; };
+		9F54352B12A6ADCC00ACA43A /* SilhouetteDetector.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SilhouetteDetector.cpp; path = ../src/SilhouetteDetector.cpp; sourceTree = "<group>"; };
 		9F586B1C1292256A005B1ED6 /* CinderOpenCV.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CinderOpenCV.h; path = ../../blocks/opencv/include/CinderOpenCV.h; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -138,7 +138,7 @@
 				9F467D73128A698400DA5788 /* Boid.h */,
 				9F467D7A128A6D3600DA5788 /* BoidController.h */,
 				32CA4F630368D1EE00C91783 /* Boids_Prefix.pch */,
-				9F54352A12A6ADCC00ACA43A /* SilhouetteDetector.h */,
+				9F54352A12A6ADCC00ACA43A /* src */,
 			);
 			name = Headers;
 			sourceTree = "<group>";
