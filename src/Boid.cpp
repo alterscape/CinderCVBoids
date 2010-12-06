@@ -103,8 +103,8 @@ void Boid::draw()
 	gl::drawVector( pos - velNormal * mLength, pos - velNormal * mLength * 0.75f, mLength * 0.7f, mRadius );
 	if(drawClosestSilhouettePoint) {
 		glColor3f(0.0f,1.0f,0.0f);
+		glLineWidth(0.5f);
 		glBegin(GL_LINES);
-		glLineWidth(1.0f);
 		gl::vertex(pos);
 		gl::vertex(closestSilhouettePoint);
 		glEnd();
