@@ -28,6 +28,9 @@ BoidController::BoidController()
 	flatten				= true;	
 	mMousePressed		= false;
 	
+	silThresh = 500.0f;
+	silRepelStrength = 1.00f;
+	
 }
 
 void BoidController::applyForceToBoids()
@@ -241,21 +244,20 @@ void BoidController::applySilhouetteToBoids(std::vector<Vec2i_ptr_vec> * polygon
 			}
 		}
 		p1->closestSilhouettePoint = imageToWorldMap->transformPoint(closestPoint);
-		float silThresh = 1000.0f;
-		float repelStrength = 0.50f;
+		
 		if (closestDistanceSquared < silThresh) {	//FIXME magic numbers suck
 			float per = closestDistanceSquared/silThresh;
 			Vec3f distance = xformedPos-closestPoint;	//closestPoint and xformedPos are in image space
 			//cout << "original pos: (" << p1->pos.x << "," << p1->pos.y << "," << p1->pos.z << "; xformed pos: (" << xformedPos.x << "," << xformedPos.y << "," << xformedPos.z << "); distance to closest^2: " << closestDistanceSquared <<endl;
 			//std::cout << "distance, for example: " << distance.length() << "; point: (" << closestPoint.x << "," << closestPoint.y << ")" << std::endl;
 			
-			float F = ( 1.0f - per ) * repelStrength;	
+			float F = ( 1.0f - per ) * silRepelStrength;	
 			
 			//FIXME: distance is in image-space. p1->acc is in world-space. This will lead to weirdness and ought to be accounted for somewhere in here.
 			distance.normalize();
 			distance *= F;
 			//std::cout << "repelling from silhouette with vector: (" << distance.x << ","<< distance.y << "," << distance.z << "); magnitude: " << F << std::endl;
-			p1->acc += distance;
+			p1->acc -= distance;
 		}
 		
 	}

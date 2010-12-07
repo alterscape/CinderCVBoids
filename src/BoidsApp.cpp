@@ -14,10 +14,11 @@
 #include "cinder/gl/Texture.h"
 #include "cinder/Capture.h"
 #include "CinderOpenCV.h"
+#include "BoidSysProperties.h"
 
 #include <vector>
 
-#define NUM_INITIAL_PARTICLES 50
+#define NUM_INITIAL_PARTICLES 150
 #define NUM_PARTICLES_TO_SPAWN 15
 
 using namespace ci;
@@ -66,6 +67,8 @@ public:
 private:
 	SilhouetteDetector	*silhouetteDetector;
 	vector<Vec2i_ptr_vec> * polygons;
+	vector<BoidSysPair> boidRulesets;
+	int currentBoidRuleNumber;
 };
 
 void edgeDetectArea(Surface *surface, Area area);
@@ -116,7 +119,8 @@ void BoidsApp::setup()
 	flock_one.addBoids( NUM_INITIAL_PARTICLES );
 	flock_two.addBoids( NUM_INITIAL_PARTICLES );
 	flock_one.baseColor = ColorA( CM_RGB, 1.0, 0.0, 0.0);
-	flock_two.baseColor = ColorA( CM_RGB, 0.0, 0.0, 1.0);
+	flock_one.silRepelStrength = -0.50f;
+	flock_two.baseColor = ColorA( CM_RGB, 0.5, 0.5, 1.0);
 	
 	flock_one.addOtherFlock(&flock_two);
 	flock_two.addOtherFlock(&flock_one);
@@ -143,6 +147,54 @@ void BoidsApp::setup()
 	imageToScreenMap.translate(Vec3f(getWindowSize().x/2, getWindowSize().y/2, 0));	//translate over and down
 	imageToScreenMap.scale(Vec3f(-1*getWindowSize().x/320.0f, -1*getWindowSize().y/240.0f,1.0f));	//scale up
 	polygons = new vector<Vec2i_ptr_vec>();
+	
+	currentBoidRuleNumber = 0;
+	
+	//stuff to create boid rulesets
+	BoidSysPair defaults;
+	defaults.flockOneProps.zoneRadius			= 80.0f;
+	defaults.flockOneProps.lowerThresh			= 0.5f;
+	defaults.flockOneProps.higherThresh			= 0.8f;
+	defaults.flockOneProps.attractStrength		= 0.004f;
+	defaults.flockOneProps.repelStrength		= 0.01f;
+	defaults.flockOneProps.orientStrength		= 0.01f;
+	defaults.flockOneProps.silThresh			= 500.0f;
+	defaults.flockOneProps.silRepelStrength		= 1.00f;
+	defaults.flockOneProps.baseColor			= ColorA( CM_RGB, 1.0, 0.0, 0.0);
+	
+	defaults.flockTwoProps.zoneRadius			= 80.0f;
+	defaults.flockTwoProps.lowerThresh			= 0.5f;
+	defaults.flockTwoProps.higherThresh			= 0.8f;
+	defaults.flockTwoProps.attractStrength		= 0.004f;
+	defaults.flockTwoProps.repelStrength		= 0.01f;
+	defaults.flockTwoProps.orientStrength		= 0.01f;
+	defaults.flockTwoProps.silThresh			= 500.0f;
+	defaults.flockTwoProps.silRepelStrength		= 1.00f;
+	defaults.flockTwoProps.baseColor			= ColorA( CM_RGB, 0.5, 0.5, 1.0);
+	boidRulesets.push_back(defaults);
+	
+	BoidSysPair stuckOnYou;
+	stuckOnYou.flockOneProps.zoneRadius			= 80.0f;
+	stuckOnYou.flockOneProps.lowerThresh		= 0.5f;
+	stuckOnYou.flockOneProps.higherThresh		= 0.8f;
+	stuckOnYou.flockOneProps.attractStrength	= 0.004f;
+	stuckOnYou.flockOneProps.repelStrength		= 0.01f;
+	stuckOnYou.flockOneProps.orientStrength		= 0.01f;
+	stuckOnYou.flockOneProps.silThresh			= 1000.0f;
+	stuckOnYou.flockOneProps.silRepelStrength	= -0.50f;
+	stuckOnYou.flockOneProps.baseColor			= ColorA( CM_RGB, 0.784, 0.0, 0.714);
+	
+	stuckOnYou.flockTwoProps.zoneRadius			= 80.0f;
+	stuckOnYou.flockTwoProps.lowerThresh		= 0.5f;
+	stuckOnYou.flockTwoProps.higherThresh		= 0.8f;
+	stuckOnYou.flockTwoProps.attractStrength	= 0.004f;
+	stuckOnYou.flockTwoProps.repelStrength		= 0.01f;
+	stuckOnYou.flockTwoProps.orientStrength		= 0.01f;
+	stuckOnYou.flockTwoProps.silThresh			= 1000.0f;
+	stuckOnYou.flockTwoProps.silRepelStrength	= -0.50f;
+	stuckOnYou.flockTwoProps.baseColor			= ColorA( CM_RGB, 0.0, 0.784, 0.071);
+	boidRulesets.push_back(stuckOnYou);
+	
 }
 
 void BoidsApp::keyDown( KeyEvent event )
@@ -169,10 +221,29 @@ void BoidsApp::update()
 	//
 	
 	
-	//if (checkTime()) {
-	//		flock_one.flatten = !flock_one.flatten;
-	//		flock_two.flatten = !flock_two.flatten;
-	//	}
+	if (checkTime()) {
+		//get the next boidRuleset.
+		int boidRuleToUse = (currentBoidRuleNumber++ % boidRulesets.size());
+		BoidSysPair thisPair = boidRulesets[boidRuleToUse];
+		flock_one.zoneRadius		= thisPair.flockOneProps.zoneRadius;
+		flock_one.lowerThresh		= thisPair.flockOneProps.lowerThresh;
+		flock_one.higherThresh		= thisPair.flockOneProps.higherThresh;
+		flock_one.attractStrength	= thisPair.flockOneProps.attractStrength;
+		flock_one.repelStrength		= thisPair.flockOneProps.repelStrength;
+		flock_one.orientStrength	= thisPair.flockOneProps.orientStrength;
+		flock_one.silThresh			= thisPair.flockOneProps.silThresh;
+		flock_one.silRepelStrength	= thisPair.flockOneProps.silRepelStrength;
+		flock_one.baseColor			= thisPair.flockOneProps.baseColor;
+		
+		flock_two.zoneRadius		= thisPair.flockTwoProps.zoneRadius;
+		flock_two.lowerThresh		= thisPair.flockTwoProps.lowerThresh;
+		flock_two.higherThresh		= thisPair.flockTwoProps.higherThresh;
+		flock_two.attractStrength	= thisPair.flockTwoProps.attractStrength;
+		flock_two.repelStrength		= thisPair.flockTwoProps.repelStrength;
+		flock_two.orientStrength	= thisPair.flockTwoProps.orientStrength;
+		flock_two.silThresh			= thisPair.flockTwoProps.silThresh;
+		flock_two.silRepelStrength	= thisPair.flockTwoProps.silRepelStrength;
+		flock_two.baseColor			= thisPair.flockTwoProps.baseColor;	}
 	
 	
 	//OpenCV IO
@@ -253,8 +324,8 @@ void BoidsApp::draw()
 	//glTranslatef(-1*getWindowSize().x/2,  -1*getWindowSize().y/2, 0.1f);
 	//glScalef(getWindowSize().x/320.0f, getWindowSize().y/240.0f,1.0);	//scale up to fill the screen, same as for the video image
 	
-	glColor3f(1.0f,0.0f,0.0f);
-	glLineWidth(5.0f);
+	glColor3f(0.3f,0.35f,0.3f);
+	glLineWidth(4.5f);
 	for(vector<Vec2i_ptr_vec>::iterator polygon = polygons->begin(); polygon!=polygons->end();++polygon) {
 		glBegin(GL_LINE_STRIP);
 		for(vector<Vec2i_ptr>::iterator point = polygon->get()->begin(); point!=polygon->get()->end();++point) {

@@ -33,7 +33,7 @@ Boid::Boid( Vec3f pos, Vec3f vel, bool followed, BoidController* parent )
 	
 	mIsDead			= false;
 	mFollowed		= followed;
-	drawClosestSilhouettePoint = true;
+	drawClosestSilhouettePoint = false;
 }
 
 void Boid::pullToCenter( const Vec3f &center )

@@ -40,6 +40,8 @@ public:
 	float	attractStrength;
 	float	repelStrength;
 	float	orientStrength;
+	float	silThresh;
+	float	silRepelStrength;
 	
 	bool	centralGravity;
 	bool	flatten;
