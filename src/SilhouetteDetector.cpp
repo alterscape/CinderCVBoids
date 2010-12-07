@@ -32,7 +32,6 @@ void SilhouetteDetector::processSurface(ci::Surface8u* surface, vector<Vec2i_ptr
 	ci::Surface outputSurface = fromOcv(erroded);
 	processedOutput->setData(outputSurface.getData(),outputSurface.getWidth(),outputSurface.getHeight(),outputSurface.getRowBytes());
 		
-		//
 	//HERE BE DRAGONS
 	silhouette->imageData = (char*)erroded.data;											//here we're switching to the older-but-more-capable OpenCV C API, so make an IplImage
 	//create pointers to store data we're going to be calculating
@@ -57,7 +56,7 @@ void SilhouetteDetector::processSurface(ci::Surface8u* surface, vector<Vec2i_ptr
 	
 	//for each polygon
 	for ( CvSeq* c=first_polygon; c!=NULL; c=c->h_next ) {
-		//skip polygons containing less than 3 points.
+		//skip polygons containing less than 5 points.
 		if (c->total < 5)
 			continue;
 		

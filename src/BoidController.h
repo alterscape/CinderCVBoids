@@ -111,6 +111,7 @@ inline float pointLineDistance(CvPoint *e1, CvPoint *e2, ci::Vec3f *p) {
 	
 }
 
+//we should test this function and make sure Ryan did not do something very silly here.
 inline ci::Vec3f getClosestPointToSegment(ci::Vec3f *p1, ci::Vec3f *p2, ci::Vec3f *p)
 {
 	ci::Vec3f direction = *p2-*p1;
@@ -140,3 +141,4 @@ inline ci::Vec3f getClosestPointToSegment(ci::Vec3f *p1, ci::Vec3f *p2, ci::Vec3
 	}
 	
 }
+//end potential silliness

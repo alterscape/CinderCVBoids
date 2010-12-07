@@ -206,12 +206,14 @@ void BoidController::applyForceToBoids()
 
 void BoidController::applySilhouetteToBoids(std::vector<Vec2i_ptr_vec> * polygons, ci::Matrix44<float> *imageToWorldMap)
 {
+	//is this matrix always invertible? if not, does Bad Things Happen?
+	//debug: double-check that when you put a point in, then put the result of that into the inverted, the original comes back out
 	Matrix44<float> worldToImage = Matrix44<float>(*imageToWorldMap);
 	worldToImage.invert();
 	for( list<Boid>::iterator p1 = particles.begin(); p1 != particles.end(); ++p1 ){	//for each boid
 		Vec3f xformedPos = worldToImage.transformPoint(p1->pos);	//transform world coordinates into image coordinates
-		xformedPos.z = 0.0f;	//Force Z to be 0 for these calculations.
-		float closestDistanceSquared = 9999999.9f;
+		xformedPos.z = 0.0f;	//Force Z to be 0 for these calculations. This overrides the flatten() function -- even if flatten doesn't happen, this does.
+		float closestDistanceSquared = 999999999.9f;
 		Vec3f closestPoint;
 		//cout << "checking " << polygons->size() << " polygons!" << endl; 
 		for(vector<Vec2i_ptr_vec>::iterator polygon = polygons->begin(); polygon!=polygons->end();++polygon) {
@@ -225,27 +227,31 @@ void BoidController::applySilhouetteToBoids(std::vector<Vec2i_ptr_vec> * polygon
 				{
 					//cout << "checking a pair of points!" << endl;
 					//glVertex2f(point->get()->x,point->get()->y);
+					///everything here is in image-space
 					ci::Vec3f pt1 = ci::Vec3f(firstPoint->get()->x,firstPoint->get()->y,0.0f);
 					ci::Vec3f pt2 = ci::Vec3f(secondPoint->get()->x,secondPoint->get()->y,0.0f);
-					ci::Vec3f distance = getClosestPointToSegment(&pt1,&pt2,&xformedPos);
+					ci::Vec3f thisClosestPoint = getClosestPointToSegment(&pt1,&pt2,&xformedPos);
+					ci::Vec3f distance = xformedPos - thisClosestPoint;
 					if(distance.lengthSquared() < closestDistanceSquared) {
-						cout << "this point is closer!" << endl;
+						//cout << "this point is closer!" << endl;
 						closestDistanceSquared = distance.lengthSquared();
-						closestPoint = distance;
+						closestPoint = thisClosestPoint;
 					}
 				}
 			}
 		}
 		p1->closestSilhouettePoint = imageToWorldMap->transformPoint(closestPoint);
 		float silThresh = 1000.0f;
-		float repelStrength = 5.0f;
+		float repelStrength = 0.50f;
 		if (closestDistanceSquared < silThresh) {	//FIXME magic numbers suck
 			float per = closestDistanceSquared/silThresh;
-			Vec3f distance = xformedPos-closestPoint;
+			Vec3f distance = xformedPos-closestPoint;	//closestPoint and xformedPos are in image space
 			//cout << "original pos: (" << p1->pos.x << "," << p1->pos.y << "," << p1->pos.z << "; xformed pos: (" << xformedPos.x << "," << xformedPos.y << "," << xformedPos.z << "); distance to closest^2: " << closestDistanceSquared <<endl;
 			//std::cout << "distance, for example: " << distance.length() << "; point: (" << closestPoint.x << "," << closestPoint.y << ")" << std::endl;
 			
-			float F = ( 1.0f - per ) * repelStrength;
+			float F = ( 1.0f - per ) * repelStrength;	
+			
+			//FIXME: distance is in image-space. p1->acc is in world-space. This will lead to weirdness and ought to be accounted for somewhere in here.
 			distance.normalize();
 			distance *= F;
 			//std::cout << "repelling from silhouette with vector: (" << distance.x << ","<< distance.y << "," << distance.z << "); magnitude: " << F << std::endl;

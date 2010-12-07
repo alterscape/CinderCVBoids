@@ -140,9 +140,7 @@ void BoidsApp::setup()
 	
 	//setup transformation from camera space to opengl world space
 	imageToScreenMap.setToIdentity();
-	//imageToScreenMap.translate(Vec3f(-1*getWindowSize().x/2,  -1*getWindowSize().y/2, 0));	//translate over and down
 	imageToScreenMap.translate(Vec3f(getWindowSize().x/2, getWindowSize().y/2, 0));	//translate over and down
-	
 	imageToScreenMap.scale(Vec3f(-1*getWindowSize().x/320.0f, -1*getWindowSize().y/240.0f,1.0f));	//scale up
 	polygons = new vector<Vec2i_ptr_vec>();
 }
@@ -179,8 +177,7 @@ void BoidsApp::update()
 	
 	//OpenCV IO
 	//Only do OpenCV business if capture device is open and a new frame is ready
-	if( capture && capture.checkNewFrame() ) {
-		cv::Mat input( toOcv( capture.getSurface() ) );				
+	if( capture && capture.checkNewFrame() ) {		
 		polygons->clear();
 		ci::Surface captureSurface = capture.getSurface();
 		ci::Surface outputSurface = captureSurface;
