@@ -292,6 +292,7 @@ void BoidController::draw()
 	//glBegin( GL_LINES );
 	for( list<Boid>::iterator p = particles.begin(); p != particles.end(); ++p ){
 		p->draw();
+		p->renderQuadStripTrail();
 	}
 	//glEnd();
 }

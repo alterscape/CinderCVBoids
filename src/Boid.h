@@ -22,7 +22,6 @@ public:
 	void pullToCenter( const ci::Vec3f &center );
 	void update( bool flatten );
 	void draw();
-	void drawTail();
 	void limitSpeed();
 	void addNeighborPos( ci::Vec3f pos );
 	
@@ -51,6 +50,15 @@ public:
 	bool		mIsDead;
 	bool		mFollowed;
 	bool		drawClosestSilhouettePoint;
+	
+	
+	// ** trail code ** //
+	int			mLen;
+	float		mInvLen;
+	std::vector<ci::Vec3f> mLoc;
+	
+	void renderQuadStripTrail();
+	// ** end trail code ** //
 	
 	BoidController *parent;
 };

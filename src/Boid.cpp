@@ -34,6 +34,21 @@ Boid::Boid( Vec3f pos, Vec3f vel, bool followed, BoidController* parent )
 	mIsDead			= false;
 	mFollowed		= followed;
 	drawClosestSilhouettePoint = false;
+	
+	
+	
+	// ** trail code ** //
+	//note: 'aLoc' in Hodgin is 'pos' here.
+	
+	mLen			= 15;
+	mInvLen			= 1.0f / (float)mLen;
+	for( int i=0; i<mLen; ++i ) {
+		mLoc.push_back( pos );
+	}
+	// ** end trail code ** //
+	
+	
+	
 }
 
 void Boid::pullToCenter( const Vec3f &center )
@@ -67,8 +82,9 @@ void Boid::update( bool flatten )
 	
 	
 	pos += vel;
-	if( flatten )
+	if( flatten ){
 		pos.z = 0.0f;
+	}
 	
 	tailPos = pos - ( velNormal * mLength );
 	vel *= mDecay;
@@ -80,6 +96,23 @@ void Boid::update( bool flatten )
 	acc = Vec3f::zero();
 	mNeighborPos = Vec3f::zero();
 	mNumNeighbors = 0;
+	
+	// ** trail code ** //
+	
+	//update position array
+	for( int i=mLen-1; i>0; i-- ) {
+		mLoc[i] = mLoc[i-1];
+	}
+	mLoc[0] += vel;
+	
+	if( flatten ){
+		mLoc[0].z=0.0;
+	}
+	
+	
+	//update 
+	
+	// ** trail code ** //
 }
 
 void Boid::limitSpeed()
@@ -112,18 +145,29 @@ void Boid::draw()
 	
 }
 
-void Boid::drawTail()
-{
-	glColor4f( mColor );
-	glVertex3fv( pos );
-	glColor4f( ColorA( mColor.r, mColor.g, mColor.b, 0.01f ) );
-	glVertex3fv( tailPos );
-}
-
 void Boid::addNeighborPos( Vec3f pos )
 {
 	mNeighborPos += pos;
 	mNumNeighbors ++;
 }
 
-
+void Boid::renderQuadStripTrail()
+{
+	glBegin( GL_QUAD_STRIP );
+	for( int i=0; i<mLen-2; i++ ){
+		float per	= i / (float)(mLen-1);
+		
+		Vec3f perp0	= Vec3f( mLoc[i].x, mLoc[i].y, 0.0f ) - Vec3f( mLoc[i+1].x, mLoc[i+1].y, 0.0f );
+		Vec3f perp1	= perp0.cross( Vec3f::zAxis() );
+		Vec3f perp2	= perp0.cross( perp1 );
+		perp1	= perp0.cross( perp2 ).normalized();
+		
+		Vec3f off	= perp1 * ( mRadius * ( 1.0f - per ) * 0.25f  );
+		
+		glColor4f( ( 1.0f - per ) * 0.75f, 0.15f, per * 0.5f, ( 1.0f - per ) * 0.25f );
+		glVertex3fv( mLoc[i] - off );
+		glVertex3fv( mLoc[i] + off );
+	}
+	
+	glEnd();
+}
