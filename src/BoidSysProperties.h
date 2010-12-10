@@ -29,4 +29,5 @@ struct BoidSysProperties {
 struct BoidSysPair {
 	BoidSysProperties flockOneProps;
 	BoidSysProperties flockTwoProps;
+	ci::Color imageColor;
 };

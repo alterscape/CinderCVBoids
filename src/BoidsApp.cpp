@@ -69,6 +69,7 @@ private:
 	vector<Vec2i_ptr_vec> * polygons;
 	vector<BoidSysPair> boidRulesets;
 	int currentBoidRuleNumber;
+	ci::ColorA imageColor;
 };
 
 void edgeDetectArea(Surface *surface, Area area);
@@ -82,6 +83,7 @@ void BoidsApp::prepareSettings( Settings *settings )
 void BoidsApp::setup()
 {	
 	Rand::randomize();
+	//setFullScreen(true);
 	
 	mCenter				= Vec3f( getWindowWidth() * 0.5f, getWindowHeight() * 0.5f, 0.0f );
 	mSaveFrames			= false;
@@ -120,7 +122,8 @@ void BoidsApp::setup()
 	flock_two.addBoids( NUM_INITIAL_PARTICLES );
 	flock_one.baseColor = ColorA( CM_RGB, 1.0, 0.0, 0.0);
 	flock_one.silRepelStrength = -0.50f;
-	flock_two.baseColor = ColorA( CM_RGB, 0.5, 0.5, 1.0);
+	flock_two.baseColor = ColorA( CM_RGB, 1.0, 0.0, 0.0);
+	imageColor = ColorA( CM_RGB, 1.0, 1.0, 1.0);
 	
 	flock_one.addOtherFlock(&flock_two);
 	flock_two.addOtherFlock(&flock_one);
@@ -170,7 +173,9 @@ void BoidsApp::setup()
 	defaults.flockTwoProps.orientStrength		= 0.01f;
 	defaults.flockTwoProps.silThresh			= 500.0f;
 	defaults.flockTwoProps.silRepelStrength		= 1.00f;
-	defaults.flockTwoProps.baseColor			= ColorA( CM_RGB, 0.5, 0.5, 1.0);
+	defaults.flockTwoProps.baseColor			= ColorA(CM_RGB, 1.0, 0.0, 0.0);
+	
+	defaults.imageColor							= ColorA( 1.0f, 1.0f, 1.0f, 1.0f );
 	boidRulesets.push_back(defaults);
 	
 	BoidSysPair stuckOnYou;
@@ -192,8 +197,35 @@ void BoidsApp::setup()
 	stuckOnYou.flockTwoProps.orientStrength		= 0.01f;
 	stuckOnYou.flockTwoProps.silThresh			= 1000.0f;
 	stuckOnYou.flockTwoProps.silRepelStrength	= -0.50f;
-	stuckOnYou.flockTwoProps.baseColor			= ColorA( CM_RGB, 0.0, 0.784, 0.071);
+	//stuckOnYou.flockTwoProps.baseColor			= ColorA( CM_RGB, 0.0, 0.784, 0.071);
+	stuckOnYou.flockTwoProps.baseColor			= ColorA( CM_RGB, 0.784, 0.0, 0.714);
+	
+	stuckOnYou.imageColor						= ColorA( 0.804f, 0.902f, 0.698f, 1.0f);
 	boidRulesets.push_back(stuckOnYou);
+	
+	BoidSysPair diff;
+	diff.flockOneProps.zoneRadius			= 80.0f;
+	diff.flockOneProps.lowerThresh		= 0.5f;
+	diff.flockOneProps.higherThresh		= 0.8f;
+	diff.flockOneProps.attractStrength	= 0.004f;
+	diff.flockOneProps.repelStrength		= 0.01f;
+	diff.flockOneProps.orientStrength		= 0.01f;
+	diff.flockOneProps.silThresh			= 1000.0f;
+	diff.flockOneProps.silRepelStrength	= -0.50f;
+	diff.flockOneProps.baseColor			= ColorA(CM_RGB, 1.0, 0.671, 0.278);
+	
+	diff.flockTwoProps.zoneRadius			= 80.0f;
+	diff.flockTwoProps.lowerThresh		= 0.5f;
+	diff.flockTwoProps.higherThresh		= 0.8f;
+	diff.flockTwoProps.attractStrength	= 0.004f;
+	diff.flockTwoProps.repelStrength		= 0.01f;
+	diff.flockTwoProps.orientStrength		= 0.01f;
+	diff.flockTwoProps.silThresh			= 1000.0f;
+	diff.flockTwoProps.silRepelStrength	= 1.0f;
+	diff.flockTwoProps.baseColor			= ColorA( CM_RGB, 0.2, 0.384, 0.1);
+	
+	diff.imageColor						= ColorA(0.804f, 0.902f, 1.0f, 0.698f);
+	boidRulesets.push_back(diff);
 	
 }
 
@@ -235,6 +267,7 @@ void BoidsApp::update()
 		flock_one.silRepelStrength	= thisPair.flockOneProps.silRepelStrength;
 		flock_one.baseColor			= thisPair.flockOneProps.baseColor;
 		
+		
 		flock_two.zoneRadius		= thisPair.flockTwoProps.zoneRadius;
 		flock_two.lowerThresh		= thisPair.flockTwoProps.lowerThresh;
 		flock_two.higherThresh		= thisPair.flockTwoProps.higherThresh;
@@ -243,6 +276,8 @@ void BoidsApp::update()
 		flock_two.orientStrength	= thisPair.flockTwoProps.orientStrength;
 		flock_two.silThresh			= thisPair.flockTwoProps.silThresh;
 		flock_two.silRepelStrength	= thisPair.flockTwoProps.silRepelStrength;
+		
+		imageColor					= thisPair.imageColor;
 		flock_two.baseColor			= thisPair.flockTwoProps.baseColor;	}
 	
 	
@@ -346,7 +381,8 @@ void BoidsApp::draw()
 
 void BoidsApp::drawCapture(){
 	if( texture){
-		gl::color( ColorA( 1.0f, 1.0f, 1.0f, 1.0f ) );
+		//gl::color( ColorA( 1.0f, 1.0f, 1.0f, 1.0f ) );
+		gl::color(imageColor);
 		//texture.bind();
 		gl::pushModelView();
 		gl::multModelView(imageToScreenMap);
