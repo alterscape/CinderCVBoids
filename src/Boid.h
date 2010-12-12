@@ -58,6 +58,8 @@ public:
 	std::vector<ci::Vec3f> mLoc;
 	
 	void renderQuadStripTrail();
+	
+	float		radius;
 	// ** end trail code ** //
 	
 	BoidController *parent;

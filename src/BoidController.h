@@ -19,6 +19,7 @@
 #include <vector>
 #include "SilhouetteDetector.h"
 
+
 class BoidController {
 public:
 	BoidController();

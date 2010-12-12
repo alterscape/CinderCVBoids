@@ -15,6 +15,7 @@ Boid::Boid( Vec3f pos, Vec3f vel, bool followed, BoidController* parent )
 	this->vel		= vel;
 	velNormal		= Vec3f::yAxis();
 	this->acc		= Vec3f::zero();
+	radius			= Rand::randFloat( 15.0f, 23.0f );
 	
 	mNeighborPos	= Vec3f::zero();
 	mNumNeighbors	= 0;
@@ -23,7 +24,7 @@ Boid::Boid( Vec3f pos, Vec3f vel, bool followed, BoidController* parent )
 	mMinSpeed		= Rand::randFloat( 1.0f, 1.5f );
 	mMinSpeedSqrd	= mMinSpeed * mMinSpeed;
 	
-	mColor			= ColorA( 1.0f, 1.0f, 1.0f, 1.0f );
+	mColor			= ColorA( 0.0f, 0.0f, 0.0f, 0.0f );
 	
 	mDecay			= 0.99f;
 	mRadius			= 1.0f;
@@ -92,6 +93,7 @@ void Boid::update( bool flatten )
 	//float c = math<float>::min( mNumNeighbors/50.0f, 1.0f );
 //	mColor = ColorA( CM_HSV, 1.0f - c, c, c * 0.5f + 0.5f, 1.0f );
 	mColor = parent->getColor(this);
+
 	
 	acc = Vec3f::zero();
 	mNeighborPos = Vec3f::zero();
@@ -132,17 +134,25 @@ void Boid::limitSpeed()
 
 void Boid::draw()
 {
-	glColor4f( mColor );
-	gl::drawVector( pos - velNormal * mLength, pos - velNormal * mLength * 0.75f, mLength * 0.7f, mRadius );
-	if(drawClosestSilhouettePoint) {
-		glColor3f(0.0f,1.0f,0.0f);
-		glLineWidth(0.5f);
-		glBegin(GL_LINES);
-		gl::vertex(pos);
-		gl::vertex(closestSilhouettePoint);
-		glEnd();
-	}
+
 	
+	glDepthMask( GL_FALSE ); //IMPORTANT
+	glDisable( GL_DEPTH_TEST ); //IMPORTANT
+	glEnable( GL_BLEND ); //IMPORTANT
+	glBlendFunc( GL_SRC_ALPHA, GL_ONE ); //IMPORTANT
+	
+	
+	glPushMatrix();
+	glTranslatef( pos.x, pos.y, 0 );
+	glScalef( radius, radius, radius );
+	glColor4f(mColor);
+	glBegin( GL_QUADS );
+	glTexCoord2f(0, 0);    glVertex2f(-.5, -.5);
+	glTexCoord2f(1, 0);    glVertex2f( .5, -.5);
+	glTexCoord2f(1, 1);    glVertex2f( .5,  .5);
+	glTexCoord2f(0, 1);    glVertex2f(-.5,  .5);
+	glEnd();
+	glPopMatrix();
 }
 
 void Boid::addNeighborPos( Vec3f pos )
@@ -151,8 +161,13 @@ void Boid::addNeighborPos( Vec3f pos )
 	mNumNeighbors ++;
 }
 
+// ** trail code ** //
 void Boid::renderQuadStripTrail()
 {
+	glDisable( GL_TEXTURE_2D );
+
+	
+	gl::color( mColor );
 	glBegin( GL_QUAD_STRIP );
 	for( int i=0; i<mLen-2; i++ ){
 		float per	= i / (float)(mLen-1);
@@ -162,12 +177,16 @@ void Boid::renderQuadStripTrail()
 		Vec3f perp2	= perp0.cross( perp1 );
 		perp1	= perp0.cross( perp2 ).normalized();
 		
-		Vec3f off	= perp1 * ( mRadius * ( 1.0f - per ) * 0.25f  );
+		Vec3f off	= perp1 * ( radius * ( 1.0f - per )  ); // controls trail width
 		
-		glColor4f( ( 1.0f - per ) * 0.75f, 0.15f, per * 0.5f, ( 1.0f - per ) * 0.25f );
+		glColor4f( ( 1.0f - per ) * 0.5f, 0.15f, per * 0.5f, ( 1.0f - per ) * 0.25f );
 		glVertex3fv( mLoc[i] - off );
 		glVertex3fv( mLoc[i] + off );
 	}
 	
 	glEnd();
+	
+	glEnable( GL_TEXTURE_2D );
+
 }
+// ** trail code ** //

@@ -9,6 +9,10 @@
 #include "SilhouetteDetector.h"
 #include "time.h"
 #include "cinder/Surface.h"
+#include "Resources.h"
+
+
+
 
 //CV stuff
 #include "cinder/gl/Texture.h"
@@ -18,7 +22,7 @@
 
 #include <vector>
 
-#define NUM_INITIAL_PARTICLES 150
+#define NUM_INITIAL_PARTICLES 100
 #define NUM_PARTICLES_TO_SPAWN 15
 
 using namespace ci;
@@ -35,6 +39,7 @@ public:
 	void drawCapture();
 	void draw();
 	bool checkTime();
+	void drawPolyLines();
 	
 	//Mouse code ///
 	void mouseDown( MouseEvent event );
@@ -60,7 +65,8 @@ public:
 	
 	
 	Capture				capture;
-	gl::Texture			texture;
+	gl::Texture			texture; // camera texture
+	gl::Texture			mParticleTexture; // boid texture
 	int					cvThreshholdLevel;
 	Matrix44<float>		imageToScreenMap;
 	
@@ -98,6 +104,9 @@ void BoidsApp::setup()
 	mUp					= Vec3f::yAxis();
 	mCam.setPerspective( 75.0f, getWindowAspectRatio(), 5.0f, 5000.0f );
 	
+	mParticleTexture	= gl::Texture( loadImage( loadResource( RES_PARTICLE ) ) );
+	
+	
 	// Initialize the OpenCV input (Below added RS 2010-11-15)
 	try {
 		//ci::Device device = Capture.
@@ -120,16 +129,16 @@ void BoidsApp::setup()
 	// CREATE PARTICLE CONTROLLER
 	flock_one.addBoids( NUM_INITIAL_PARTICLES );
 	flock_two.addBoids( NUM_INITIAL_PARTICLES );
-	flock_one.baseColor = ColorA( CM_RGB, 1.0, 0.0, 0.0);
+	flock_one.baseColor = ColorA( CM_RGB, 0.784, 0.0, 0.714, 1.0);
 	flock_one.silRepelStrength = -0.50f;
-	flock_two.baseColor = ColorA( CM_RGB, 1.0, 0.0, 0.0);
-	imageColor = ColorA( CM_RGB, 1.0, 1.0, 1.0);
+	flock_two.baseColor = ColorA( CM_RGB, 0.0, 1.0, 0.0, 1.0);
+	imageColor = ColorA( CM_RGB, 0.4, 0.4, 0.4, 1.0);
 	
 	flock_one.addOtherFlock(&flock_two);
 	flock_two.addOtherFlock(&flock_one);
 	// SETUP PARAMS
 	mParams = params::InterfaceGl( "Flocking", Vec2i( 200, 310 ) );
-	mParams.addParam( "Scene Rotation", &mSceneRotation, "opened=1" );
+	mParams.addParam( "Scene Rotation", &mSceneRotation, "opened=1" );//
 	mParams.addSeparator();
 	mParams.addParam( "Eye Distance", &mCameraDistance, "min=100.0 max=2000.0 step=50.0 keyIncr=s keyDecr=w" );
 	mParams.addParam( "Center Gravity", &flock_one.centralGravity, "keyIncr=g" );
@@ -163,7 +172,7 @@ void BoidsApp::setup()
 	defaults.flockOneProps.orientStrength		= 0.01f;
 	defaults.flockOneProps.silThresh			= 500.0f;
 	defaults.flockOneProps.silRepelStrength		= 1.00f;
-	defaults.flockOneProps.baseColor			= ColorA( CM_RGB, 1.0, 0.0, 0.0);
+	defaults.flockOneProps.baseColor			= ColorA( CM_RGB, 0.157, 1.0, 0.0,1.0);
 	
 	defaults.flockTwoProps.zoneRadius			= 80.0f;
 	defaults.flockTwoProps.lowerThresh			= 0.5f;
@@ -173,9 +182,9 @@ void BoidsApp::setup()
 	defaults.flockTwoProps.orientStrength		= 0.01f;
 	defaults.flockTwoProps.silThresh			= 500.0f;
 	defaults.flockTwoProps.silRepelStrength		= 1.00f;
-	defaults.flockTwoProps.baseColor			= ColorA(CM_RGB, 1.0, 0.0, 0.0);
+	defaults.flockTwoProps.baseColor			= ColorA( CM_RGB, 0.157, 1.0, 0.0,1.0);
 	
-	defaults.imageColor							= ColorA( 1.0f, 1.0f, 1.0f, 1.0f );
+	defaults.imageColor							= ColorA( 0.0f, 0.2f, 0.2f, 1.0f );
 	boidRulesets.push_back(defaults);
 	
 	BoidSysPair stuckOnYou;
@@ -187,7 +196,7 @@ void BoidsApp::setup()
 	stuckOnYou.flockOneProps.orientStrength		= 0.01f;
 	stuckOnYou.flockOneProps.silThresh			= 1000.0f;
 	stuckOnYou.flockOneProps.silRepelStrength	= -0.50f;
-	stuckOnYou.flockOneProps.baseColor			= ColorA( CM_RGB, 0.784, 0.0, 0.714);
+	stuckOnYou.flockOneProps.baseColor			= ColorA( CM_RGB, 0.784, 0.0, 0.714, 1.0);
 	
 	stuckOnYou.flockTwoProps.zoneRadius			= 80.0f;
 	stuckOnYou.flockTwoProps.lowerThresh		= 0.5f;
@@ -197,34 +206,33 @@ void BoidsApp::setup()
 	stuckOnYou.flockTwoProps.orientStrength		= 0.01f;
 	stuckOnYou.flockTwoProps.silThresh			= 1000.0f;
 	stuckOnYou.flockTwoProps.silRepelStrength	= -0.50f;
-	//stuckOnYou.flockTwoProps.baseColor			= ColorA( CM_RGB, 0.0, 0.784, 0.071);
-	stuckOnYou.flockTwoProps.baseColor			= ColorA( CM_RGB, 0.784, 0.0, 0.714);
+	stuckOnYou.flockTwoProps.baseColor			= ColorA( CM_RGB, 0.784, 0.0, 0.714, 1.0);
 	
-	stuckOnYou.imageColor						= ColorA( 0.804f, 0.902f, 0.698f, 1.0f);
+	stuckOnYou.imageColor						= ColorA( 0.098, 0.078f, 0.0f, 1.0f);
 	boidRulesets.push_back(stuckOnYou);
 	
 	BoidSysPair diff;
 	diff.flockOneProps.zoneRadius			= 80.0f;
-	diff.flockOneProps.lowerThresh		= 0.5f;
-	diff.flockOneProps.higherThresh		= 0.8f;
-	diff.flockOneProps.attractStrength	= 0.004f;
+	diff.flockOneProps.lowerThresh			= 0.5f;
+	diff.flockOneProps.higherThresh			= 0.8f;
+	diff.flockOneProps.attractStrength		= 0.004f;
 	diff.flockOneProps.repelStrength		= 0.01f;
 	diff.flockOneProps.orientStrength		= 0.01f;
 	diff.flockOneProps.silThresh			= 1000.0f;
-	diff.flockOneProps.silRepelStrength	= -0.50f;
-	diff.flockOneProps.baseColor			= ColorA(CM_RGB, 1.0, 0.671, 0.278);
+	diff.flockOneProps.silRepelStrength		= -0.50f;
+	diff.flockOneProps.baseColor			= ColorA( CM_RGB, 0.784, 0.0, 0.714, 1.0);
 	
 	diff.flockTwoProps.zoneRadius			= 80.0f;
-	diff.flockTwoProps.lowerThresh		= 0.5f;
-	diff.flockTwoProps.higherThresh		= 0.8f;
-	diff.flockTwoProps.attractStrength	= 0.004f;
+	diff.flockTwoProps.lowerThresh			= 0.5f;
+	diff.flockTwoProps.higherThresh			= 0.8f;
+	diff.flockTwoProps.attractStrength		= 0.004f;
 	diff.flockTwoProps.repelStrength		= 0.01f;
 	diff.flockTwoProps.orientStrength		= 0.01f;
 	diff.flockTwoProps.silThresh			= 1000.0f;
-	diff.flockTwoProps.silRepelStrength	= 1.0f;
-	diff.flockTwoProps.baseColor			= ColorA( CM_RGB, 0.2, 0.384, 0.1);
+	diff.flockTwoProps.silRepelStrength		= 1.0f;
+	diff.flockTwoProps.baseColor			= ColorA( CM_RGB, 0.157, 1.0, 0.0,1.0);
 	
-	diff.imageColor						= ColorA(0.804f, 0.902f, 1.0f, 0.698f);
+	diff.imageColor						= ColorA(0.0f, 0.098f, 0.008f, 1.0f);
 	boidRulesets.push_back(diff);
 	
 }
@@ -246,12 +254,20 @@ void BoidsApp::update()
 	gl::setMatrices( mCam );
 	gl::rotate( mSceneRotation);
 	
-	// CUBE CODE
-	glEnable( GL_TEXTURE_2D );
-	gl::enableDepthRead();
-	gl::enableDepthWrite();	
-	//
+	// image CODE
 	
+	//gl::enableAlphaBlending();
+	//	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+	
+	//gl::enableAdditiveBlending();
+	//glEnable(GL_BLEND);
+	//glEnable( GL_TEXTURE_2D );
+	
+	//gl::enableDepthWrite( true );
+	//gl::enableDepthWrite( true );
+	//glBlendFunc( GL_ONE, GL_SRC_ALPHA );
+
 	
 	if (checkTime()) {
 		//get the next boidRuleset.
@@ -278,7 +294,9 @@ void BoidsApp::update()
 		flock_two.silRepelStrength	= thisPair.flockTwoProps.silRepelStrength;
 		
 		imageColor					= thisPair.imageColor;
-		flock_two.baseColor			= thisPair.flockTwoProps.baseColor;	}
+		flock_two.baseColor			= thisPair.flockTwoProps.baseColor;	
+	 }
+	 
 	
 	
 	//OpenCV IO
@@ -337,28 +355,46 @@ void BoidsApp::updateMousePosition(MouseEvent event){
 
 void BoidsApp::draw()
 {	
-	gl::clear( Color( 0, 0, 0 ), true );
-	gl::enableDepthRead();
-	gl::enableDepthWrite();
 	
-	glColor3f(1.0f,0.0f,0.0f);
-	glBegin(GL_POINTS);
-	glVertex3f(10.0f,0.0f,1.0f);
-	glColor3f(0.0f,1.0f,0.0f);
-	glVertex3f(0.0f,10.0f,1.0f);
-	glEnd();
+	glEnable( GL_TEXTURE_2D );
+	gl::clear( Color( 0, 0, 0 ), true );	//this clears the old images off the window.
+	
+	
+	mParticleTexture.bind();
 	flock_one.draw();
 	flock_two.draw();
-	drawCapture();
+	mParticleTexture.unbind();
 	
+	//drawCapture();
+	drawPolyLines();
+
+	/*
+	if( mSaveFrames ){
+		writeImage( getHomeDirectory() + "flocking/image_" + toString( getElapsedFrames() ) + ".png", copyWindowSurface() );
+	}
+		*/
+	
+	
+
+	
+	// DRAW PARAMS WINDOW
+	params::InterfaceGl::draw();
+}
+
+
+void BoidsApp::drawPolyLines(){
 	//DRAW THE POLYGONS
 	//glPushMatrix();
+	
+	gl::enableDepthRead( true );
+	gl::enableDepthWrite( true );
+	
 	gl::pushModelView();
 	gl::multModelView(imageToScreenMap);
-	glTranslatef(0.0f,0.0f,0.1f);
+	glTranslatef(0.0f,0.0f,-0.01f);
 	//glTranslatef(-1*getWindowSize().x/2,  -1*getWindowSize().y/2, 0.1f);
 	//glScalef(getWindowSize().x/320.0f, getWindowSize().y/240.0f,1.0);	//scale up to fill the screen, same as for the video image
-	
+
 	glColor3f(0.3f,0.35f,0.3f);
 	glLineWidth(4.5f);
 	for(vector<Vec2i_ptr_vec>::iterator polygon = polygons->begin(); polygon!=polygons->end();++polygon) {
@@ -369,25 +405,33 @@ void BoidsApp::draw()
 		glEnd();
 	}
 	gl::popModelView();
-	
-	if( mSaveFrames ){
-		writeImage( getHomeDirectory() + "flocking/image_" + toString( getElapsedFrames() ) + ".png", copyWindowSurface() );
 	}
-	
-	
-	// DRAW PARAMS WINDOW
-	params::InterfaceGl::draw();
-}
 
 void BoidsApp::drawCapture(){
 	if( texture){
-		//gl::color( ColorA( 1.0f, 1.0f, 1.0f, 1.0f ) );
+		glPushAttrib(GL_CURRENT_BIT);
+		
+
+		
+		gl::enableDepthRead( false );
+		gl::enableDepthWrite( true );
+		
+		glDepthMask( GL_FALSE ); //IMPORTANT
+		glDisable( GL_DEPTH_TEST ); //IMPORTANT
+		glEnable( GL_BLEND ); //IMPORTANT
+		glBlendFunc( GL_SRC_ALPHA, GL_ONE ); //IMPORTANT
+		
+		texture.bind();
+		gl::color( ColorA( 1.0f, 1.0f, 1.0f, 0.0f ) );
 		gl::color(imageColor);
-		//texture.bind();
 		gl::pushModelView();
 		gl::multModelView(imageToScreenMap);
 		gl::draw(texture);
 		gl::popModelView();
+		texture.unbind();
+		
+		glPopAttrib();
+		
 	}
 }
 

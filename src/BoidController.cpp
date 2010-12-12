@@ -287,14 +287,18 @@ void BoidController::update()
 
 void BoidController::draw()
 {	
-	// DRAW PARTICLE ARROWS
-	gl::color( ColorA( 1.0f, 1.0f, 1.0f, 1.0f ) );
-	//glBegin( GL_LINES );
+
+	//gl::enableDepthWrite( false );
+	//gl::enableDepthRead( true );
+
+	glBegin( GL_QUADS );
 	for( list<Boid>::iterator p = particles.begin(); p != particles.end(); ++p ){
-		p->draw();
 		p->renderQuadStripTrail();
+		p->draw();
 	}
-	//glEnd();
+	glEnd();
+	
+
 }
 
 

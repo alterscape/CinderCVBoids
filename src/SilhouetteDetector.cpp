@@ -33,7 +33,7 @@ void SilhouetteDetector::processSurface(ci::Surface8u* surface, vector<Vec2i_ptr
 	processedOutput->setData(outputSurface.getData(),outputSurface.getWidth(),outputSurface.getHeight(),outputSurface.getRowBytes());
 		
 	//HERE BE DRAGONS
-	silhouette->imageData = (char*)erroded.data;											//here we're switching to the older-but-more-capable OpenCV C API, so make an IplImage
+	silhouette->imageData = (char*)erroded.data;			//here we're switching to the older-but-more-capable OpenCV C API, so make an IplImage
 	//create pointers to store data we're going to be calculating
 	CvMemStorage* storage = cvCreateMemStorage();
 	CvSeq* first_contour = NULL;
