@@ -76,9 +76,10 @@ private:
 	vector<BoidSysPair> boidRulesets;
 	int currentBoidRuleNumber;
 	ci::ColorA imageColor;
+	double lastFrameTime;
+	double deltaT;
+	bool shouldBeFullscreen;
 };
-
-void edgeDetectArea(Surface *surface, Area area);
 
 void BoidsApp::prepareSettings( Settings *settings )
 {
@@ -90,6 +91,7 @@ void BoidsApp::setup()
 {	
 	Rand::randomize();
 	//setFullScreen(true);
+	shouldBeFullscreen = false;
 	
 	mCenter				= Vec3f( getWindowWidth() * 0.5f, getWindowHeight() * 0.5f, 0.0f );
 	mSaveFrames			= false;
@@ -103,6 +105,8 @@ void BoidsApp::setup()
 	mCenter				= Vec3f::zero();
 	mUp					= Vec3f::yAxis();
 	mCam.setPerspective( 75.0f, getWindowAspectRatio(), 5.0f, 5000.0f );
+	lastFrameTime		= getElapsedSeconds();
+	deltaT				= 0;
 	
 	mParticleTexture	= gl::Texture( loadImage( loadResource( RES_PARTICLE ) ) );
 	
@@ -114,12 +118,19 @@ void BoidsApp::setup()
 		
 		std::cout << "Capture Devices:" << std::endl;
 		std::vector<boost::shared_ptr<Capture::Device> >::iterator device_iterator;
-		for(device_iterator=devices.begin(); device_iterator!=devices.end(); device_iterator++)
+		//for(device_iterator=devices.begin(); device_iterator!=devices.end(); device_iterator++)
+		for(int i=0; i<devices.size();i++)
 		{
-			console() << device_iterator->get()->getName() << std::endl;
+			console() << "device " << i << ": " << devices[i]->getName() << std::endl;
+			
 		}
 		
-		capture = Capture(320,240);
+		//UNCOMMENT FOLLOWING LINE FOR BUILT-IN CAMERA
+		//apture = Capture(320,240);
+		
+		//UNCOMMENT FOLLOWING LINE FOR UNIBRAIN OR WHATEVER
+		capture = Capture(320,240,devices[0]);//,devices[0]);	//FIXME this is a dumb way to select a device
+		
 		capture.start();
 		silhouetteDetector = new SilhouetteDetector(320,240);
 	} catch ( ... ) {
@@ -129,9 +140,9 @@ void BoidsApp::setup()
 	// CREATE PARTICLE CONTROLLER
 	flock_one.addBoids( NUM_INITIAL_PARTICLES );
 	flock_two.addBoids( NUM_INITIAL_PARTICLES );
-	flock_one.baseColor = ColorA( CM_RGB, 0.784, 0.0, 0.714, 1.0);
+	flock_one.setColor(ColorA( CM_RGB, 0.784, 0.0, 0.714, 1.0));
 	flock_one.silRepelStrength = -0.50f;
-	flock_two.baseColor = ColorA( CM_RGB, 0.0, 1.0, 0.0, 1.0);
+	flock_two.setColor(ColorA( CM_RGB, 0.0, 1.0, 0.0, 1.0));
 	imageColor = ColorA( CM_RGB, 0.4, 0.4, 0.4, 1.0);
 	
 	flock_one.addOtherFlock(&flock_two);
@@ -140,18 +151,20 @@ void BoidsApp::setup()
 	mParams = params::InterfaceGl( "Flocking", Vec2i( 200, 310 ) );
 	mParams.addParam( "Scene Rotation", &mSceneRotation, "opened=1" );//
 	mParams.addSeparator();
+	mParams.addParam( "Fullscreen", &shouldBeFullscreen,"keyIncr=f" ); //FIXME
+	mParams.addSeparator();
 	mParams.addParam( "Eye Distance", &mCameraDistance, "min=100.0 max=2000.0 step=50.0 keyIncr=s keyDecr=w" );
-	mParams.addParam( "Center Gravity", &flock_one.centralGravity, "keyIncr=g" );
-	mParams.addParam( "Flatten", &flock_one.flatten, "keyIncr=f" );
+	//mParams.addParam( "Center Gravity", &flock_one.centralGravity, "keyIncr=g" );
+	//mParams.addParam( "Flatten", &flock_one.flatten, "keyIncr=f" );
 	mParams.addSeparator();
-	mParams.addParam( "Zone Radius", &flock_one.zoneRadius, "min=10.0 max=100.0 step=1.0 keyIncr=z keyDecr=Z" );
-	mParams.addParam( "Lower Thresh", &flock_one.lowerThresh, "min=0.025 max=1.0 step=0.025 keyIncr=l keyDecr=L" );
-	mParams.addParam( "Higher Thresh", &flock_one.higherThresh, "min=0.025 max=1.0 step=0.025 keyIncr=h keyDecr=H" );
-	mParams.addSeparator();
-	mParams.addParam( "Attract Strength", &flock_one.attractStrength, "min=0.001 max=0.1 step=0.001 keyIncr=a keyDecr=A" );
-	mParams.addParam( "Repel Strength", &flock_one.repelStrength, "min=0.001 max=0.1 step=0.001 keyIncr=r keyDecr=R" );
-	mParams.addParam( "Orient Strength", &flock_one.orientStrength, "min=0.001 max=0.1 step=0.001 keyIncr=o keyDecr=O" );
-	mParams.addSeparator();
+	//mParams.addParam( "Zone Radius", &flock_one.zoneRadius, "min=10.0 max=100.0 step=1.0 keyIncr=z keyDecr=Z" );
+//	mParams.addParam( "Lower Thresh", &flock_one.lowerThresh, "min=0.025 max=1.0 step=0.025 keyIncr=l keyDecr=L" );
+//	mParams.addParam( "Higher Thresh", &flock_one.higherThresh, "min=0.025 max=1.0 step=0.025 keyIncr=h keyDecr=H" );
+//	mParams.addSeparator();
+//	mParams.addParam( "Attract Strength", &flock_one.attractStrength, "min=0.001 max=0.1 step=0.001 keyIncr=a keyDecr=A" );
+//	mParams.addParam( "Repel Strength", &flock_one.repelStrength, "min=0.001 max=0.1 step=0.001 keyIncr=r keyDecr=R" );
+//	mParams.addParam( "Orient Strength", &flock_one.orientStrength, "min=0.001 max=0.1 step=0.001 keyIncr=o keyDecr=O" );
+//	mParams.addSeparator();
 	mParams.addParam( "CV Threshhold", &silhouetteDetector->cvThresholdLevel, "min=0 max=255 step=1 keyIncr=t keyDecr=T" );
 	
 	//setup transformation from camera space to opengl world space
@@ -173,6 +186,7 @@ void BoidsApp::setup()
 	defaults.flockOneProps.silThresh			= 500.0f;
 	defaults.flockOneProps.silRepelStrength		= 1.00f;
 	defaults.flockOneProps.baseColor			= ColorA( CM_RGB, 0.157, 1.0, 0.0,1.0);
+	//defaults.flockOneProps.baseColor			= BoidController::setColor(ColorA( CM_RGB, 0.157, 1.0, 0.0,1.0)) ;
 	
 	defaults.flockTwoProps.zoneRadius			= 80.0f;
 	defaults.flockTwoProps.lowerThresh			= 0.5f;
@@ -182,6 +196,7 @@ void BoidsApp::setup()
 	defaults.flockTwoProps.orientStrength		= 0.01f;
 	defaults.flockTwoProps.silThresh			= 500.0f;
 	defaults.flockTwoProps.silRepelStrength		= 1.00f;
+	//defaults.flockTwoProps.baseColor			= BoidController::setColor(ColorA( CM_RGB, 0.157, 1.0, 0.0,1.0)) ;
 	defaults.flockTwoProps.baseColor			= ColorA( CM_RGB, 0.157, 1.0, 0.0,1.0);
 	
 	defaults.imageColor							= ColorA( 0.0f, 0.2f, 0.2f, 1.0f );
@@ -197,6 +212,8 @@ void BoidsApp::setup()
 	stuckOnYou.flockOneProps.silThresh			= 1000.0f;
 	stuckOnYou.flockOneProps.silRepelStrength	= -0.50f;
 	stuckOnYou.flockOneProps.baseColor			= ColorA( CM_RGB, 0.784, 0.0, 0.714, 1.0);
+	//stuckOnYou.flockOneProps.baseColor			= BoidController::setColor(ColorA( CM_RGB, 0.784, 0.0, 0.714, 1.0)) ;
+
 	
 	stuckOnYou.flockTwoProps.zoneRadius			= 80.0f;
 	stuckOnYou.flockTwoProps.lowerThresh		= 0.5f;
@@ -207,6 +224,8 @@ void BoidsApp::setup()
 	stuckOnYou.flockTwoProps.silThresh			= 1000.0f;
 	stuckOnYou.flockTwoProps.silRepelStrength	= -0.50f;
 	stuckOnYou.flockTwoProps.baseColor			= ColorA( CM_RGB, 0.784, 0.0, 0.714, 1.0);
+	//stuckOnYou.flockTwoProps.baseColor			= BoidController::setColor(ColorA( CM_RGB, 0.784, 0.0, 0.714, 1.0)) ;
+
 	
 	stuckOnYou.imageColor						= ColorA( 0.098, 0.078f, 0.0f, 1.0f);
 	boidRulesets.push_back(stuckOnYou);
@@ -221,6 +240,7 @@ void BoidsApp::setup()
 	diff.flockOneProps.silThresh			= 1000.0f;
 	diff.flockOneProps.silRepelStrength		= -0.50f;
 	diff.flockOneProps.baseColor			= ColorA( CM_RGB, 0.784, 0.0, 0.714, 1.0);
+	//diff.flockOneProps.baseColor.BoidController::setColor(ColorA( CM_RGB, 0.784, 0.0, 0.714, 1.0)) ;
 	
 	diff.flockTwoProps.zoneRadius			= 80.0f;
 	diff.flockTwoProps.lowerThresh			= 0.5f;
@@ -231,6 +251,7 @@ void BoidsApp::setup()
 	diff.flockTwoProps.silThresh			= 1000.0f;
 	diff.flockTwoProps.silRepelStrength		= 1.0f;
 	diff.flockTwoProps.baseColor			= ColorA( CM_RGB, 0.157, 1.0, 0.0,1.0);
+	//diff.flockTwoProps.baseColor			= BoidController::setColor(ColorA( CM_RGB, 0.157, 1.0, 0.0,1.0)) ;
 	
 	diff.imageColor						= ColorA(0.0f, 0.098f, 0.008f, 1.0f);
 	boidRulesets.push_back(diff);
@@ -249,6 +270,14 @@ void BoidsApp::keyDown( KeyEvent event )
 
 void BoidsApp::update()
 {	
+	
+	double deltaT = lastFrameTime - getElapsedSeconds();
+	
+	//silly variable names, but let's hope it works
+	if(isFullScreen() != shouldBeFullscreen) {
+		setFullScreen(shouldBeFullscreen);
+	}
+	
 	mEye	= Vec3f( 0.0f, 0.0f, mCameraDistance );
 	mCam.lookAt( mEye, mCenter, mUp );
 	gl::setMatrices( mCam );
@@ -281,7 +310,7 @@ void BoidsApp::update()
 		flock_one.orientStrength	= thisPair.flockOneProps.orientStrength;
 		flock_one.silThresh			= thisPair.flockOneProps.silThresh;
 		flock_one.silRepelStrength	= thisPair.flockOneProps.silRepelStrength;
-		flock_one.baseColor			= thisPair.flockOneProps.baseColor;
+		flock_one.setColor(thisPair.flockOneProps.baseColor);
 		
 		
 		flock_two.zoneRadius		= thisPair.flockTwoProps.zoneRadius;
@@ -294,7 +323,7 @@ void BoidsApp::update()
 		flock_two.silRepelStrength	= thisPair.flockTwoProps.silRepelStrength;
 		
 		imageColor					= thisPair.imageColor;
-		flock_two.baseColor			= thisPair.flockTwoProps.baseColor;	
+		flock_two.setColor(thisPair.flockTwoProps.baseColor);	
 	 }
 	 
 	
@@ -314,11 +343,11 @@ void BoidsApp::update()
 	
 	flock_one.applyForceToBoids();
 	if( flock_one.centralGravity ) flock_one.pullToCenter( mCenter );
-	flock_one.update();
+	flock_one.update(deltaT,getElapsedSeconds());
 	
 	flock_two.applyForceToBoids();
 	if( flock_two.centralGravity) flock_two.pullToCenter( mCenter);
-	flock_two.update();
+	flock_two.update(deltaT,getElapsedSeconds());
 	
 }
 
