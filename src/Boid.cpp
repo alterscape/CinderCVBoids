@@ -86,15 +86,16 @@ void Boid::update(bool flatten)
 	
 	if( mGravity )
 	{
-		acc.y = acc.y-0.1f;//add accelleration due to'gravity'
+		acc.y = acc.y-0.2f;//add accelleration due to'gravity'
+		
 		//test if the boid is out the bottom
-		if (pos.y < -0.75*(float)app::getWindowHeight()) { 
-			//bounce it back upwards
+		if (pos.y < -0.5*(float)app::getWindowHeight()) { 
+			//bounce it back upwards, but lose energy  in the bounce
 			if (vel.y < 0.0f) {
-				vel.y= -1.0f*vel.y;
+				vel.y= -.75f*vel.y;
 			}
 			if(acc.y < 0.0f) {
-				acc.y= -1.0f*acc.y;
+				acc.y= -0.75f*acc.y;
 			}
 		}
 	}
