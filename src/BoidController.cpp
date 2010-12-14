@@ -259,7 +259,7 @@ void BoidController::applySilhouetteToBoids(std::vector<Vec2i_ptr_vec> * polygon
 			//FIXME: distance is in image-space. p1->acc is in world-space. This will lead to weirdness and ought to be accounted for somewhere in here.
 			distance.normalize();
 			distance *= F;
-			//std::cout << "repelling from silhouette with vector: (" << distance.x << ","<< distance.y << "," << distance.z << "); magnitude: " << F << std::endl;
+			//std::cout << "repeling from silhouette with vector: (" << distance.x << ","<< distance.y << "," << distance.z << "); magnitude: " << F << std::endl;
 			p1->acc -= distance;
 		}
 		
