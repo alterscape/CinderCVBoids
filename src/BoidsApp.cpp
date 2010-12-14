@@ -63,6 +63,7 @@ public:
 	double				changeInterval;
 	time_t				lastChange;
 	bool				gravity;
+	int					newFlock;
 	
 	
 	Capture				capture;
@@ -98,7 +99,7 @@ void BoidsApp::setup()
 	mCenter				= Vec3f( getWindowWidth() * 0.5f, getWindowHeight() * 0.5f, 0.0f );
 	mSaveFrames			= false;
 	mIsRenderingPrint	= false;
-	changeInterval		= 20.0;
+	changeInterval		= 15.0;
 	time(&lastChange);
 	gravity				= false;
 	
@@ -110,6 +111,7 @@ void BoidsApp::setup()
 	mCam.setPerspective( 75.0f, getWindowAspectRatio(), 5.0f, 5000.0f );
 	lastFrameTime		= getElapsedSeconds();
 	deltaT				= 0;
+	newFlock			= 0;
 	
 	mParticleTexture	= gl::Texture( loadImage( loadResource( RES_PARTICLE ) ) );
 	
@@ -214,7 +216,7 @@ void BoidsApp::setup()
 	repel.imageColor							= ColorA( 0.08f, 0.0f, 0.1f, 1.0f);	
 	boidRulesets.push_back(repel);
 	
-	
+	/*
 	//// State 3: grav - like repel, but with gravity added
 	BoidSysPair grav;
 	grav.flockOneProps=repel.flockOneProps;
@@ -224,7 +226,7 @@ void BoidsApp::setup()
 	grav.flockTwoProps=grav.flockOneProps;
 	grav.imageColor								= ColorA( 0.08f, 0.0f, 0.1f, 1.0f);
 	boidRulesets.push_back(grav);
-	
+	*/
 	
 	//// State 4: diff - one flock is attracted to the silhouette and the other is repeled
 	BoidSysPair diff;
@@ -233,13 +235,20 @@ void BoidsApp::setup()
 	diff.flockTwoProps=stuckOnYou.flockOneProps;
 	diff.imageColor								= ColorA( 0.08f, 0.0f, 0.1f, 1.0f);
 	boidRulesets.push_back(diff);
+	 
 	
 }
 
 void BoidsApp::keyDown( KeyEvent event )
 {
 	if( event.getChar() == 'p' ){
-		flock_one.addBoids( NUM_PARTICLES_TO_SPAWN );
+		if (newFlock%2) {
+			flock_one.addBoids( NUM_PARTICLES_TO_SPAWN );
+			newFlock++;
+		}else {
+			flock_two.addBoids( NUM_PARTICLES_TO_SPAWN );
+		}
+
 	} else if( event.getChar() == ' ' ){
 		mSaveFrames = !mSaveFrames;
 	}
