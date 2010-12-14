@@ -25,6 +25,8 @@ Boid::Boid( Vec3f pos, Vec3f vel, bool followed, BoidController* parent )
 	mMinSpeedSqrd	= mMinSpeed * mMinSpeed;
 	
 	mColor			= ColorA( 0.0f, 0.0f, 0.0f, 0.0f );
+	this->mGravity	= parent->getGravity(this);
+
 	
 	mDecay			= 0.99f;
 	mRadius			= 1.0f;
@@ -38,7 +40,7 @@ Boid::Boid( Vec3f pos, Vec3f vel, bool followed, BoidController* parent )
 	
 	
 	
-	// ** trail code ** //
+	// ** wing code ** //
 	//note: 'aLoc' in Hodgin is 'pos' here.
 	
 	mLen			= 15;
@@ -46,7 +48,7 @@ Boid::Boid( Vec3f pos, Vec3f vel, bool followed, BoidController* parent )
 	for( int i=0; i<mLen; ++i ) {
 		mLoc.push_back( pos );
 	}
-	// ** end trail code ** //
+	// ** end wing code ** //
 	
 	
 	
@@ -66,16 +68,36 @@ void Boid::pullToCenter( const Vec3f &center )
 }
 
 
-void Boid::update( bool flatten )
+void Boid::update(bool flatten)
 {	
+	mColor = parent->getColor(this);
+	mGravity = parent->getGravity(this);
+	//std::cout<< "gravity is: " << mGravity << std::endl;
+	
 	mCrowdFactor -= ( mCrowdFactor - ( 1.0f - mNumNeighbors * 0.02f ) ) * 0.1f;
 	mCrowdFactor = constrain( mCrowdFactor, 0.5f, 1.0f );
 	
 	mFear -= ( mFear) * 0.2f;
 	
 	if( flatten )
+	{
 		acc.z = 0.0f;
+	}
 	
+	if( mGravity )
+	{
+		acc.y = acc.y-0.1f;//add accelleration due to'gravity'
+		//test if the boid is out the bottom
+		if (pos.y < -0.5*(float)app::getWindowHeight()) { 
+			//bounce it back upwards
+			if (vel.y < 0.0f) {
+				vel.y= -1.0f*vel.y;
+			}
+			if(acc.y < 0.0f) {
+				acc.y= -1.0f*acc.y;
+			}
+		}
+	}
 	vel += acc;
 	velNormal = vel.normalized();
 	
@@ -92,7 +114,7 @@ void Boid::update( bool flatten )
 	
 	//float c = math<float>::min( mNumNeighbors/50.0f, 1.0f );
 //	mColor = ColorA( CM_HSV, 1.0f - c, c, c * 0.5f + 0.5f, 1.0f );
-	mColor = parent->getColor(this);
+	
 
 	
 	acc = Vec3f::zero();
@@ -110,11 +132,9 @@ void Boid::update( bool flatten )
 	if( flatten ){
 		mLoc[0].z=0.0;
 	}
-	
-	
 	//update 
 	
-	// ** trail code ** //
+	// ** end trail code ** //
 }
 
 void Boid::limitSpeed()

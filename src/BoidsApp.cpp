@@ -62,6 +62,7 @@ public:
 	bool				mIsRenderingPrint;
 	double				changeInterval;
 	time_t				lastChange;
+	bool				gravity;
 	
 	
 	Capture				capture;
@@ -69,6 +70,7 @@ public:
 	gl::Texture			mParticleTexture; // boid texture
 	int					cvThreshholdLevel;
 	Matrix44<float>		imageToScreenMap;
+
 	
 private:
 	SilhouetteDetector	*silhouetteDetector;
@@ -96,6 +98,7 @@ void BoidsApp::setup()
 	mIsRenderingPrint	= false;
 	changeInterval		= 10.0;
 	time(&lastChange);
+	gravity				= false;
 	
 	// SETUP CAMERA
 	mCameraDistance		= 350.0f;
@@ -162,7 +165,9 @@ void BoidsApp::setup()
 	
 	currentBoidRuleNumber = 0;
 	
-	//stuff to create boid rulesets
+	// ** stuff to create boid rulesets ** //
+	
+	// State 1: defaults - both flocks are repelled by the sillhoette
 	BoidSysPair defaults;
 	defaults.flockOneProps.zoneRadius			= 80.0f;
 	defaults.flockOneProps.lowerThresh			= 0.5f;
@@ -172,21 +177,14 @@ void BoidsApp::setup()
 	defaults.flockOneProps.orientStrength		= 0.01f;
 	defaults.flockOneProps.silThresh			= 500.0f;
 	defaults.flockOneProps.silRepelStrength		= 1.00f;
+	defaults.flockOneProps.gravity				= false;
 	defaults.flockOneProps.baseColor			= ColorA( CM_RGB, 0.157, 1.0, 0.0,1.0);
 	
-	defaults.flockTwoProps.zoneRadius			= 80.0f;
-	defaults.flockTwoProps.lowerThresh			= 0.5f;
-	defaults.flockTwoProps.higherThresh			= 0.8f;
-	defaults.flockTwoProps.attractStrength		= 0.004f;
-	defaults.flockTwoProps.repelStrength		= 0.01f;
-	defaults.flockTwoProps.orientStrength		= 0.01f;
-	defaults.flockTwoProps.silThresh			= 500.0f;
-	defaults.flockTwoProps.silRepelStrength		= 1.00f;
-	defaults.flockTwoProps.baseColor			= ColorA( CM_RGB, 0.157, 1.0, 0.0,1.0);
-	
-	defaults.imageColor							= ColorA( 0.0f, 0.2f, 0.2f, 1.0f );
+	defaults.flockTwoProps=defaults.flockOneProps;
+	defaults.imageColor							= ColorA( 0.08f, 0.0f, 0.1f, 1.0f);	
 	boidRulesets.push_back(defaults);
-	
+	/*
+	// State 2: stuckOnYou - both flocks are attracted to the sillhoette
 	BoidSysPair stuckOnYou;
 	stuckOnYou.flockOneProps.zoneRadius			= 80.0f;
 	stuckOnYou.flockOneProps.lowerThresh		= 0.5f;
@@ -196,44 +194,29 @@ void BoidsApp::setup()
 	stuckOnYou.flockOneProps.orientStrength		= 0.01f;
 	stuckOnYou.flockOneProps.silThresh			= 1000.0f;
 	stuckOnYou.flockOneProps.silRepelStrength	= -0.50f;
+	stuckOnYou.flockOneProps.gravity			= false;
 	stuckOnYou.flockOneProps.baseColor			= ColorA( CM_RGB, 0.784, 0.0, 0.714, 1.0);
 	
-	stuckOnYou.flockTwoProps.zoneRadius			= 80.0f;
-	stuckOnYou.flockTwoProps.lowerThresh		= 0.5f;
-	stuckOnYou.flockTwoProps.higherThresh		= 0.8f;
-	stuckOnYou.flockTwoProps.attractStrength	= 0.004f;
-	stuckOnYou.flockTwoProps.repelStrength		= 0.01f;
-	stuckOnYou.flockTwoProps.orientStrength		= 0.01f;
-	stuckOnYou.flockTwoProps.silThresh			= 1000.0f;
-	stuckOnYou.flockTwoProps.silRepelStrength	= -0.50f;
-	stuckOnYou.flockTwoProps.baseColor			= ColorA( CM_RGB, 0.784, 0.0, 0.714, 1.0);
-	
-	stuckOnYou.imageColor						= ColorA( 0.098, 0.078f, 0.0f, 1.0f);
+	stuckOnYou.flockTwoProps=stuckOnYou.flockOneProps;
+	stuckOnYou.imageColor						= ColorA( 0.08f, 0.0f, 0.1f, 1.0f);
 	boidRulesets.push_back(stuckOnYou);
 	
+	//// State 3: diff - one flock is attracted to the sillhoette and the other is repelled
 	BoidSysPair diff;
-	diff.flockOneProps.zoneRadius			= 80.0f;
-	diff.flockOneProps.lowerThresh			= 0.5f;
-	diff.flockOneProps.higherThresh			= 0.8f;
-	diff.flockOneProps.attractStrength		= 0.004f;
-	diff.flockOneProps.repelStrength		= 0.01f;
-	diff.flockOneProps.orientStrength		= 0.01f;
-	diff.flockOneProps.silThresh			= 1000.0f;
-	diff.flockOneProps.silRepelStrength		= -0.50f;
-	diff.flockOneProps.baseColor			= ColorA( CM_RGB, 0.784, 0.0, 0.714, 1.0);
-	
-	diff.flockTwoProps.zoneRadius			= 80.0f;
-	diff.flockTwoProps.lowerThresh			= 0.5f;
-	diff.flockTwoProps.higherThresh			= 0.8f;
-	diff.flockTwoProps.attractStrength		= 0.004f;
-	diff.flockTwoProps.repelStrength		= 0.01f;
-	diff.flockTwoProps.orientStrength		= 0.01f;
-	diff.flockTwoProps.silThresh			= 1000.0f;
-	diff.flockTwoProps.silRepelStrength		= 1.0f;
-	diff.flockTwoProps.baseColor			= ColorA( CM_RGB, 0.157, 1.0, 0.0,1.0);
-	
-	diff.imageColor						= ColorA(0.0f, 0.098f, 0.008f, 1.0f);
+	diff.flockOneProps=defaults.flockOneProps;
+	diff.flockTwoProps=stuckOnYou.flockOneProps;
+	diff.imageColor							= ColorA( 0.08f, 0.0f, 0.1f, 1.0f);
 	boidRulesets.push_back(diff);
+	
+	*/
+	//// State 4: grav - diff, but with gravity added
+	BoidSysPair grav;
+	grav.flockOneProps=defaults.flockOneProps;
+	grav.flockOneProps.gravity			= true;
+	grav.flockOneProps.baseColor			= ColorA( CM_RGB, 0.157, 0.0, 1.0,1.0);
+	grav.flockTwoProps=grav.flockOneProps;
+	grav.imageColor							= ColorA( 0.08f, 0.0f, 0.1f, 1.0f);
+	boidRulesets.push_back(grav);
 	
 }
 
@@ -253,6 +236,7 @@ void BoidsApp::update()
 	mCam.lookAt( mEye, mCenter, mUp );
 	gl::setMatrices( mCam );
 	gl::rotate( mSceneRotation);
+	
 	
 	// image CODE
 	
@@ -281,6 +265,7 @@ void BoidsApp::update()
 		flock_one.orientStrength	= thisPair.flockOneProps.orientStrength;
 		flock_one.silThresh			= thisPair.flockOneProps.silThresh;
 		flock_one.silRepelStrength	= thisPair.flockOneProps.silRepelStrength;
+		flock_one.gravity			= thisPair.flockOneProps.gravity;
 		flock_one.baseColor			= thisPair.flockOneProps.baseColor;
 		
 		
@@ -292,6 +277,7 @@ void BoidsApp::update()
 		flock_two.orientStrength	= thisPair.flockTwoProps.orientStrength;
 		flock_two.silThresh			= thisPair.flockTwoProps.silThresh;
 		flock_two.silRepelStrength	= thisPair.flockTwoProps.silRepelStrength;
+		flock_two.gravity			= thisPair.flockTwoProps.gravity;
 		
 		imageColor					= thisPair.imageColor;
 		flock_two.baseColor			= thisPair.flockTwoProps.baseColor;	

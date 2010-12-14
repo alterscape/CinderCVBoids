@@ -21,6 +21,7 @@ struct BoidSysProperties {
 
 	bool	centralGravity;
 	bool	flatten;
+	bool	gravity;
 
 	ci::Color baseColor;
 

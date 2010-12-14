@@ -25,7 +25,8 @@ BoidController::BoidController()
 	orientStrength		= 0.01f;
 	
 	centralGravity		= true;
-	flatten				= true;	
+	flatten				= true;
+	gravity				= false;
 	mMousePressed		= false;
 	
 	silThresh = 500.0f;
@@ -100,9 +101,7 @@ void BoidController::applyForceToBoids()
 			std::cout << "\n M-B DIST: " << mdist.x << ", " << mdist.y;
 			std::cout << "\n DIST SQR: " << distSqrd;
 			*/
-			
-			
-			
+						
 			if (distSqrd < zoneRadiusSqrd){			// Uses zone radius squared
 				//std::cout << "  MOUSE NEAR BOID!!  ";
 				//std::cout << "\n BOID acc before: " << p1->acc.x << ", " << p1->acc.y;
@@ -205,6 +204,8 @@ void BoidController::applyForceToBoids()
 		
 	}
 	boidCentroid /= (float)numBoids;
+	//keep boids above bottom
+	//std::cout << "PY: " << 
 }
 
 void BoidController::applySilhouetteToBoids(std::vector<Vec2i_ptr_vec> * polygons, ci::Matrix44<float> *imageToWorldMap)
@@ -278,7 +279,7 @@ void BoidController::update()
 		if( p->mIsDead ){
 			p = particles.erase( p );
 		} else {
-			p->update( flatten);
+			p->update(flatten);
 			++p;
 		}
 	}
@@ -340,6 +341,12 @@ ci::Color BoidController::getColor(Boid *boid)
 //	float c = math<float>::min( boid->mNumNeighbors/50.0f, 1.0f );
 //	return ColorA( CM_HSV, 1.0f - c, c, c * 0.5f + 0.5f, 1.0f );
 	return baseColor;
+}
+
+
+bool BoidController::getGravity(Boid *boid) 
+{
+	return gravity;
 }
 
 void BoidController::addOtherFlock(BoidController *flock)

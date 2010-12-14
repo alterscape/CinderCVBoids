@@ -20,7 +20,7 @@ public:
 	Boid();
 	Boid( ci::Vec3f pos, ci::Vec3f vel, bool followed, BoidController *parent );
 	void pullToCenter( const ci::Vec3f &center );
-	void update( bool flatten );
+	void update( bool flatten);
 	void draw();
 	void limitSpeed();
 	void addNeighborPos( ci::Vec3f pos );
@@ -49,6 +49,7 @@ public:
 	
 	bool		mIsDead;
 	bool		mFollowed;
+	bool		mGravity;
 	bool		drawClosestSilhouettePoint;
 	
 	

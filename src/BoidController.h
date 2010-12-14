@@ -31,6 +31,7 @@ public:
 	void addBoids( int amt );
 	void removeBoids( int amt );
 	ci::Color getColor(Boid *boid);
+	bool getGravity(Boid *boid);
 	ci::Vec3f getPos();
 	void addOtherFlock(BoidController *flock);
 	
@@ -46,6 +47,7 @@ public:
 	
 	bool	centralGravity;
 	bool	flatten;
+	bool	gravity;
 	
 	ci::Color baseColor;
 	
