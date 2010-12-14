@@ -32,6 +32,8 @@ BoidController::BoidController()
 	silThresh = 500.0f;
 	silRepelStrength = 1.00f;
 	
+	colorFadeDuration	= 1.0f;		//half a second
+	startFade			= false;
 }
 
 void BoidController::applyForceToBoids()
@@ -273,7 +275,7 @@ void BoidController::pullToCenter( const ci::Vec3f &center )
 	
 }
 
-void BoidController::update()
+void BoidController::update(double timeStep, double elapsedSeconds)
 {
 	for( list<Boid>::iterator p = particles.begin(); p != particles.end(); ){
 		if( p->mIsDead ){
@@ -283,7 +285,24 @@ void BoidController::update()
 			++p;
 		}
 	}
+	//do color update business
+	//if the color was changed, start the fade
+	if (startFade == true) {
+		//std::cout << "started fade at time " << elapsedSeconds << std::endl;	//REMOVE ME, I'M SLOW
+		colorFadeStartTime = elapsedSeconds;
+		startFade = false;
+	}
 	
+	//until we get to the new color
+	//if (colorFadeStartTime + colorFadeDuration < elapsedSeconds)
+	if(elapsedSeconds - colorFadeStartTime < colorFadeDuration) 
+	{
+		float percent = (elapsedSeconds - colorFadeStartTime) / colorFadeDuration;
+		//std::cout << "seconds: " << elapsedSeconds << "; elapsed time since fade start: " << (elapsedSeconds - colorFadeStartTime) << "; percent: " << percent << std::endl;
+		baseColor = ColorA(oldBaseColor.r + (newBaseColor.r - oldBaseColor.r) * percent, 
+						   oldBaseColor.g + (newBaseColor.g - oldBaseColor.g) * percent,
+						   oldBaseColor.b + (newBaseColor.b - oldBaseColor.b) * percent);
+	} 
 }
 
 void BoidController::draw()
@@ -344,9 +363,17 @@ ci::Color BoidController::getColor(Boid *boid)
 }
 
 
+
 bool BoidController::getGravity(Boid *boid) 
 {
 	return gravity;
+}
+
+void BoidController::setColor(ColorA color) 
+{
+	startFade = true;
+	oldBaseColor = baseColor;
+	newBaseColor = color;
 }
 
 void BoidController::addOtherFlock(BoidController *flock)
