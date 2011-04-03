@@ -131,7 +131,7 @@ void BoidsApp::setup()
 		}
 		
 		//UNCOMMENT FOLLOWING LINE FOR BUILT-IN CAMERA
-		//apture = Capture(320,240);
+		//capture = Capture(320,240);
 		
 		//UNCOMMENT FOLLOWING LINE FOR UNIBRAIN OR WHATEVER
 		capture = Capture(320,240,devices[0]);//,devices[0]);	//FIXME this is a dumb way to select a device
@@ -216,7 +216,7 @@ void BoidsApp::setup()
 	repel.imageColor							= ColorA( 0.08f, 0.0f, 0.1f, 1.0f);	
 	boidRulesets.push_back(repel);
 	
-	/*
+	
 	//// State 3: grav - like repel, but with gravity added
 	BoidSysPair grav;
 	grav.flockOneProps=repel.flockOneProps;
@@ -226,7 +226,7 @@ void BoidsApp::setup()
 	grav.flockTwoProps=grav.flockOneProps;
 	grav.imageColor								= ColorA( 0.08f, 0.0f, 0.1f, 1.0f);
 	boidRulesets.push_back(grav);
-	*/
+	
 	
 	//// State 4: diff - one flock is attracted to the silhouette and the other is repeled
 	BoidSysPair diff;

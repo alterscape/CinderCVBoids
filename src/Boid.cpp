@@ -36,7 +36,7 @@ Boid::Boid( Vec3f pos, Vec3f vel, bool followed, BoidController* parent )
 	
 	mIsDead			= false;
 	mFollowed		= followed;
-	drawClosestSilhouettePoint = false;
+	drawClosestSilhouettePoint = true;
 	
 	
 	
@@ -89,7 +89,7 @@ void Boid::update(bool flatten)
 		acc.y = acc.y-0.2f;//add accelleration due to'gravity'
 		
 		//test if the boid is out the bottom
-		if (pos.y < -0.5*(float)app::getWindowHeight()) { 
+		if (pos.y < -0.3*(float)app::getWindowHeight()) { 
 			//bounce it back upwards, but lose energy  in the bounce
 			if (vel.y < 0.0f) {
 				vel.y= -.75f*vel.y;
@@ -174,6 +174,15 @@ void Boid::draw()
 	glTexCoord2f(0, 1);    glVertex2f(-.5,  .5);
 	glEnd();
 	glPopMatrix();
+	
+	if(drawClosestSilhouettePoint) {
+		glColor4f(1.0f,1.0f,0.0f,1.0f);
+		glBegin(GL_LINES);
+		glLineWidth(1.0f);
+		gl::vertex(pos);
+		gl::vertex(closestSilhouettePoint);
+		glEnd();
+	}
 }
 
 void Boid::addNeighborPos( Vec3f pos )

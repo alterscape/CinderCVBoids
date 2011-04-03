@@ -30,8 +30,9 @@ void SilhouetteDetector::processSurface(ci::Surface8u* surface, vector<Vec2i_ptr
 	cv::erode(dilated,erroded,cv::Mat());
 	
 	ci::Surface outputSurface = fromOcv(erroded);
-	processedOutput->setData(outputSurface.getData(),outputSurface.getWidth(),outputSurface.getHeight(),outputSurface.getRowBytes());
-		
+	//processedOutput->setData(outputSurface.getData(),outputSurface.getWidth(),outputSurface.getHeight(),outputSurface.getRowBytes());
+	processedOutput->copyFrom( outputSurface, outputSurface.getBounds() );
+	
 	//HERE BE DRAGONS
 	silhouette->imageData = (char*)erroded.data;			//here we're switching to the older-but-more-capable OpenCV C API, so make an IplImage
 	//create pointers to store data we're going to be calculating
